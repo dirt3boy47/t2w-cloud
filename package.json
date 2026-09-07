@@ -1,0 +1,41 @@
+{
+  "name": "t2w-cloud",
+  "version": "2.0.0",
+  "private": true,
+  "description": "T2W Pipeline Master Asset Register \u2014 Cloudflare + Supabase edition",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "db:migrate": "node server/migrate.js",
+    "db:seed": "node server/seed-postgres.js",
+    "db:fresh": "node server/seed-postgres.js --force --fresh-start",
+    "seed": "node server/seed-postgres.js",
+    "users": "node server/manage-users.js",
+    "check": "node scripts/check.js",
+    "deploy": "wrangler deploy",
+    "dev:cloudflare": "wrangler dev",
+    "db:setup": "node server/migrate.js && node server/seed-postgres.js --fresh-start",
+    "db:reload": "node server/migrate.js && node server/seed-postgres.js --force --fresh-start",
+    "verify": "node scripts/check.js"
+  },
+  "keywords": [
+    "t2w",
+    "pipeline",
+    "cloudflare",
+    "supabase"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "connect-pg-simple": "^10.0.0",
+    "csv-parse": "^6.1.0",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@cloudflare/containers": "^0.3.0",
+    "wrangler": "^4.35.0"
+  }
+}

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chainage map — T2W Pipeline Asset Register</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .strip-wrap { overflow-x: auto; padding-bottom: 6px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 8px 0 14px; }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .swatch { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+  .zoomrow { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin-bottom: 10px; }
+  .zoomrow .field { margin-bottom: 0; min-width: 130px; }
+  .tick-label { font-size: 9px; fill: var(--muted); }
+  .sec-title { font-size: 14px; font-weight: 600; color: var(--brand-dark); margin: 4px 0 2px; }
+  .sec-sub { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  svg text { font-family: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <h2>Chainage map</h2>
+    <div class="zoomrow">
+      <div class="field"><label>From (m)</label><input id="zFrom" type="number" placeholder="start"></div>
+      <div class="field"><label>To (m)</label><input id="zTo" type="number" placeholder="end"></div>
+      <button class="btn" id="btnZoom">Zoom</button>
+      <button class="btn secondary" id="btnReset">Whole alignment</button>
+      <div class="count" id="zHint"></div>
+    </div>
+    <div class="legend">
+      <span><i class="swatch" style="background:#0f5f4c"></i> trench complete</span>
+      <span><i class="swatch" style="background:#9fc7ba"></i> trench outstanding</span>
+      <span><i class="swatch" style="background:#1f6feb"></i> pipe laid</span>
+      <span><i class="swatch" style="background:#aecbf5"></i> pipe outstanding</span>
+      <span><i class="swatch" style="background:#b5651d"></i> trench front</span>
+      <span><i class="swatch" style="background:#7b3fb5"></i> pipe front</span>
+      <span><i class="swatch" style="background:#0f7b3c;border-radius:50%"></i> asset complete</span>
+      <span><i class="swatch" style="background:#b42318;border-radius:50%"></i> asset outstanding</span>
+    </div>
+    <div id="strips"></div>
+  </div>
+</main>
+
+<script src="/t2w.js"></script>
+<script>
+let stripData = [];
+let view = null;   // {from,to} or null for full extent
+
+const W = 1180, PAD = 46;
+
+function scale(x, from, to) {
+  return PAD + ((x - from) / (to - from)) * (W - PAD * 2);
+}
+
+function renderSection(s) {
+  const from = view ? view.from : 0;
+  const to = view ? view.to : (s.extent || 1);
+  const span = to - from || 1;
+  const H = 150;
+  const yTrench = 40, yPipe = 74, hBar = 22, yAssets = 112;
+
+  // gridlines every ~1km, adapted to the window
+  const step = span > 8000 ? 2000 : span > 3000 ? 1000 : span > 800 ? 250 : 50;
+  let grid = '';
+  for (let x = Math.ceil(from / step) * step; x <= to; x += step) {
+    const px = scale(x, from, to);
+    grid += `<line x1="${px}" y1="28" x2="${px}" y2="${yAssets + 12}" stroke="#e8ecef" stroke-width="1"/>
+             <text class="tick-label" x="${px}" y="22" text-anchor="middle">${x.toLocaleString()}</text>`;
+  }
+
+  // trench sections: outstanding underneath, completed portion over it
+  let trench = '';
+  for (const t of s.trench) {
+    if (t.end == null || t.start == null) continue;
+    if (t.end < from || t.start > to) continue;
+    const x1 = scale(Math.max(t.start, from), from, to);
+    const x2 = scale(Math.min(t.end, to), from, to);
+    trench += `<rect x="${x1}" y="${yTrench}" width="${Math.max(x2 - x1, 0.6)}" height="${hBar}"
+                 fill="#9fc7ba" stroke="#fff" stroke-width="0.5"><title>${t.recordKey}  ${t.trenchType || ''}
+${t.start}–${t.end} m  (${Math.round((t.pct || 0) * 100)}% complete)</title></rect>`;
+    if (t.complete > 0) {
+      const doneEnd = Math.min(t.start + t.complete, to);
+      if (doneEnd > from) {
+        const dx1 = scale(Math.max(t.start, from), from, to);
+        const dx2 = scale(doneEnd, from, to);
+        trench += `<rect x="${dx1}" y="${yTrench}" width="${Math.max(dx2 - dx1, 0.6)}" height="${hBar}"
+                     fill="#0f5f4c"><title>${t.recordKey} complete ${Math.round(t.complete)} m</title></rect>`;
+      }
+    }
+  }
+
+  // pipe segments
+  let pipe = '';
+  for (const p of s.pipe) {
+    if (p.end == null || p.start == null) continue;
+    if (p.end < from || p.start > to) continue;
+    const x1 = scale(Math.max(p.start, from), from, to);
+    const x2 = scale(Math.min(p.end, to), from, to);
+    pipe += `<rect x="${x1}" y="${yPipe}" width="${Math.max(x2 - x1, 0.6)}" height="${hBar}"
+               fill="#aecbf5" stroke="#fff" stroke-width="0.5"><title>${p.recordKey}  ${p.pipeType || ''}
+${p.start}–${p.end} m  (${Math.round((p.pct || 0) * 100)}% laid)</title></rect>`;
+    if (p.laid > 0) {
+      const doneEnd = Math.min(p.start + p.laid, to);
+      if (doneEnd > from) {
+        const dx1 = scale(Math.max(p.start, from), from, to);
+        const dx2 = scale(doneEnd, from, to);
+        pipe += `<rect x="${dx1}" y="${yPipe}" width="${Math.max(dx2 - dx1, 0.6)}" height="${hBar}"
+                   fill="#1f6feb"><title>${p.recordKey} laid ${Math.round(p.laid)} m</title></rect>`;
+      }
+    }
+  }
+
+  // point assets, stacked into rows by register so they don't all collide
+  const REG_ROW = { 'Bend': 0, 'Valve': 0, 'Thrust Block': 1, 'Trench Stop & Bulkhead': 1,
+                    'Creek Crossing': 2, 'Road & Rail Crossing': 2, 'Vegetation': 3, 'Foreign Service': 3 };
+  let assets = '';
+  let shown = 0;
+  for (const a of s.assets) {
+    if (a.chainage < from || a.chainage > to) continue;
+    shown++;
+    const px = scale(a.chainage, from, to);
+    const row = REG_ROW[a.register] ?? 3;
+    const py = yAssets + row * 7;
+    const done = a.complete === 'Yes';
+    const col = done ? '#0f7b3c' : (a.autoComplete === 'YES' ? '#b42318' : '#b8c2cc');
+    assets += `<circle cx="${px}" cy="${py}" r="2.6" fill="${col}"><title>${a.recordKey}
+${a.register} ${a.assetType || ''} @ ${a.chainage} m
+driver ${a.driver || 'none'}${done ? ' — complete' : (a.autoComplete === 'YES' ? ' — front passed, NOT ticked' : '')}</title></circle>`;
+  }
+
+  // the two fronts
+  const fr = (val, colour, label) => {
+    if (val == null || val < from || val > to) return '';
+    const px = scale(val, from, to);
+    return `<line x1="${px}" y1="30" x2="${px}" y2="${yAssets + 26}" stroke="${colour}" stroke-width="2"/>
+            <text x="${px + 3}" y="${yAssets + 34}" font-size="10" fill="${colour}">${label} ${Math.round(val).toLocaleString()} m</text>`;
+  };
+
+  return `
+    <div class="sec-title">${T2W.esc(s.section)}</div>
+    <div class="sec-sub">extent ${T2W.num(s.extent)} m &middot;
+      trench front ${T2W.num(s.trenchFront)} m &middot; pipe front ${T2W.num(s.pipeFront)} m &middot;
+      ${shown} of ${s.assets.length} assets shown</div>
+    <div class="strip-wrap">
+      <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+        ${grid}
+        <text x="6" y="${yTrench + 15}" font-size="10" fill="#64748b">trench</text>
+        <text x="6" y="${yPipe + 15}" font-size="10" fill="#64748b">pipe</text>
+        <text x="6" y="${yAssets + 4}" font-size="10" fill="#64748b">assets</text>
+        ${trench}${pipe}${assets}
+        ${fr(s.trenchFront, '#b5651d', 'trench')}
+        ${fr(s.pipeFront, '#7b3fb5', 'pipe')}
+      </svg>
+    </div>`;
+}
+
+function renderAll() {
+  document.getElementById('strips').innerHTML =
+    stripData.map((s) => `<div style="margin-bottom:26px">${renderSection(s)}</div>`).join('');
+  document.getElementById('zHint').textContent = view
+    ? `showing ${T2W.num(view.from)}–${T2W.num(view.to)} m`
+    : 'showing the whole alignment';
+}
+
+(async () => {
+  await T2W.mount();
+  stripData = await T2W.api('/strip');
+  renderAll();
+
+  document.getElementById('btnZoom').addEventListener('click', () => {
+    const f = Number(document.getElementById('zFrom').value);
+    const t = Number(document.getElementById('zTo').value);
+    if (isNaN(f) || isNaN(t) || t <= f) { alert('Enter a from and to, with to greater than from.'); return; }
+    view = { from: f, to: t };
+    renderAll();
+  });
+  document.getElementById('btnReset').addEventListener('click', () => {
+    view = null;
+    document.getElementById('zFrom').value = '';
+    document.getElementById('zTo').value = '';
+    renderAll();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Find assets — T2W Pipeline Asset Register</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <div class="card">
+    <h2>Find assets</h2>
+    <div class="grid cols-4">
+      <div class="field"><label>Pipeline section</label><select id="fSection"><option value="">Any</option></select></div>
+      <div class="field"><label>Register</label><select id="fRegister"><option value="">Any</option></select></div>
+      <div class="field"><label>Asset type</label><select id="fAssetType"><option value="">Any</option></select></div>
+      <div class="field"><label>Drawing</label><input id="fDrawing"></div>
+      <div class="field"><label>Chainage from (m)</label><input id="fChFrom" type="number"></div>
+      <div class="field"><label>Chainage to (m)</label><input id="fChTo" type="number"></div>
+      <div class="field"><label>Search everything</label><input id="fText"></div>
+      <div class="field" style="display:flex;align-items:end;gap:8px">
+        <label style="display:flex;align-items:center;gap:6px;margin:0">
+          <input type="checkbox" id="fNotComplete" style="width:auto"> Not complete only
+        </label>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn" id="btnFind">Find</button>
+      <button class="btn secondary" id="btnClear">Clear</button>
+    </div>
+    <div class="count" id="count"></div>
+  </div>
+
+  <div class="card">
+    <div class="table-wrap"><table class="data" id="tbl">
+      <thead><tr>
+        <th>Record Key</th><th>Section</th><th>Register</th><th>Asset type</th>
+        <th>Ch. start</th><th>Ch. end</th><th>Length</th><th>Feature</th>
+        <th>Total cost</th><th>Complete</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</main>
+
+<div id="detailOverlay" style="display:none;position:fixed;inset:0;background:#0006;z-index:10">
+  <div style="background:#fff;max-width:900px;margin:40px auto;border-radius:8px;max-height:85vh;overflow:auto" class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 id="detailTitle">Asset</h2>
+      <button class="btn secondary" id="btnCloseDetail">Close</button>
+    </div>
+    <div id="detailMsg"></div>
+    <div class="grid cols-3" id="detailFields"></div>
+    <div class="field"><label>Comments</label><textarea id="detComments" rows="2"></textarea></div>
+    <div class="field"><label>Progress notes</label><textarea id="detProgress" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn" id="btnSaveDetail">Save changes</button>
+      <button class="btn secondary" id="btnHistory">Edit history</button>
+    </div>
+    <div id="historyBox" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<script src="/t2w.js"></script>
+<script>
+const EDITABLE = ['Complete','Completion Date','Test Status','Test Date','Installed','Install Date','Comments','Progress Notes'];
+const DISPLAY_ONLY = ['Record Key','Asset ID','Pipeline Section','Register','Asset Type',
+  'Chainage Start (m)','Chainage End (m)','Length (m)','Trench Type','Drawing (Start)',
+  'Feature Name','Operator','Utility Description','Unit Rate ($)','Quantity','Total Cost ($)',
+  'Completion Driver','Auto Complete'];
+
+let currentKey = null;
+
+function buildQuery() {
+  const p = new URLSearchParams();
+  const map = { fSection: 'section', fRegister: 'register', fAssetType: 'assetType',
+    fDrawing: 'drawing', fChFrom: 'chFrom', fChTo: 'chTo', fText: 'text' };
+  for (const [id, key] of Object.entries(map)) {
+    const v = document.getElementById(id).value.trim();
+    if (v) p.set(key, v);
+  }
+  if (document.getElementById('fNotComplete').checked) p.set('notComplete', 'true');
+  return p.toString();
+}
+
+function renderRows(rows) {
+  const tbody = document.querySelector('#tbl tbody');
+  tbody.innerHTML = rows.map((r) => `
+    <tr data-key="${T2W.esc(r['Record Key'])}">
+      <td>${T2W.esc(r['Record Key'])}</td>
+      <td>${T2W.esc(r['Pipeline Section'])}</td>
+      <td>${T2W.esc(r['Register'])}</td>
+      <td>${T2W.esc(r['Asset Type'])}</td>
+      <td>${T2W.num(r['Chainage Start (m)'])}</td>
+      <td>${T2W.num(r['Chainage End (m)'])}</td>
+      <td>${T2W.num(r['Length (m)'])}</td>
+      <td>${T2W.esc(r['Feature Name'] || r['Utility Description'] || '')}</td>
+      <td>${T2W.money(r['Total Cost ($)'])}</td>
+      <td>${T2W.pill(r['Complete'])}</td>
+    </tr>`).join('');
+  document.getElementById('count').textContent = rows.length + ' records';
+  tbody.querySelectorAll('tr').forEach((tr) => {
+    tr.addEventListener('click', () => openDetail(tr.dataset.key));
+  });
+}
+
+async function runSearch() {
+  const rows = await T2W.api('/assets?' + buildQuery());
+  renderRows(rows);
+}
+
+async function openDetail(key) {
+  currentKey = key;
+  const a = await T2W.api('/assets/' + encodeURIComponent(key));
+  document.getElementById('detailTitle').textContent = a['Record Key'];
+  document.getElementById('detailMsg').innerHTML = '';
+  document.getElementById('historyBox').innerHTML = '';
+
+  const shown = DISPLAY_ONLY.concat(['Complete', 'Completion Date', 'Test Status', 'Test Date', 'Installed', 'Install Date']);
+  document.getElementById('detailFields').innerHTML = shown.map((f) => {
+    const editable = EDITABLE.includes(f);
+    const val = a[f] ?? '';
+    return `<div class="field">
+      <label>${T2W.esc(f)}</label>
+      <input data-field="${T2W.esc(f)}" value="${T2W.esc(val)}" ${editable ? '' : 'readonly style="background:#f4f6f8;color:#64748b"'}>
+    </div>`;
+  }).join('');
+  document.getElementById('detComments').value = a['Comments'] || '';
+  document.getElementById('detProgress').value = a['Progress Notes'] || '';
+  document.getElementById('detailOverlay').style.display = 'block';
+}
+
+async function saveDetail() {
+  const changes = {};
+  document.querySelectorAll('#detailFields input:not([readonly])').forEach((inp) => {
+    changes[inp.dataset.field] = inp.value;
+  });
+  changes['Comments'] = document.getElementById('detComments').value;
+  changes['Progress Notes'] = document.getElementById('detProgress').value;
+  const msg = document.getElementById('detailMsg');
+  try {
+    await T2W.api('/assets/' + encodeURIComponent(currentKey), { method: 'PUT', body: changes });
+    msg.innerHTML = '<div class="msg ok">Saved.</div>';
+    runSearch();
+  } catch (e) {
+    msg.innerHTML = `<div class="msg err">${T2W.esc(e.message)}</div>`;
+  }
+}
+
+async function showHistory() {
+  const rows = await T2W.api('/assets/' + encodeURIComponent(currentKey) + '/history');
+  const box = document.getElementById('historyBox');
+  if (!rows.length) { box.innerHTML = '<div class="count">No edits recorded for this asset.</div>'; return; }
+  box.innerHTML = '<table class="data"><thead><tr><th>When</th><th>By</th><th>Field</th><th>From</th><th>To</th></tr></thead><tbody>' +
+    rows.map((r) => `<tr><td>${T2W.esc(r.Timestamp)}</td><td>${T2W.esc(r['Edited by'])}</td>` +
+      `<td>${T2W.esc(r.Field)}</td><td>${T2W.esc(r['Previous value'])}</td><td>${T2W.esc(r['New value'])}</td></tr>`).join('') +
+    '</tbody></table>';
+}
+
+(async () => {
+  await T2W.mount();
+  const facets = await T2W.api('/assets/facets');
+  for (const s of facets.sections) document.getElementById('fSection').insertAdjacentHTML('beforeend', `<option>${T2W.esc(s)}</option>`);
+  for (const s of facets.registers) document.getElementById('fRegister').insertAdjacentHTML('beforeend', `<option>${T2W.esc(s)}</option>`);
+  for (const s of facets.assetTypes) document.getElementById('fAssetType').insertAdjacentHTML('beforeend', `<option>${T2W.esc(s)}</option>`);
+
+  document.getElementById('btnFind').addEventListener('click', runSearch);
+  document.getElementById('btnClear').addEventListener('click', () => {
+    document.querySelectorAll('main input').forEach((i) => (i.type === 'checkbox' ? (i.checked = false) : (i.value = '')));
+    document.querySelectorAll('main select').forEach((s) => (s.value = ''));
+    runSearch();
+  });
+  document.getElementById('btnCloseDetail').addEventListener('click', () => {
+    document.getElementById('detailOverlay').style.display = 'none';
+  });
+  document.getElementById('btnSaveDetail').addEventListener('click', saveDetail);
+  document.getElementById('btnHistory').addEventListener('click', showHistory);
+
+  runSearch();
+})();
+</script>
+</body>
+</html>

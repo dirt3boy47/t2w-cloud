@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Edit log — T2W Pipeline Asset Register</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <div class="card">
+    <h2>Edit log — most recent 500 changes</h2>
+    <div class="table-wrap"><table class="data" id="tbl">
+      <thead><tr><th>When</th><th>By</th><th>Record key</th><th>Field</th><th>Previous</th><th>New</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</main>
+<script src="/t2w.js"></script>
+<script>
+(async () => {
+  await T2W.mount();
+  const rows = await T2W.api('/edit-log');
+  document.querySelector('#tbl tbody').innerHTML = rows.map((r) => `
+    <tr><td>${T2W.esc(r.Timestamp)}</td><td>${T2W.esc(r['Edited by'])}</td>
+      <td>${T2W.esc(r['Record Key'])}</td><td>${T2W.esc(r.Field)}</td>
+      <td>${T2W.esc(r['Previous value'])}</td><td>${T2W.esc(r['New value'])}</td></tr>
+  `).join('');
+})();
+</script>
+</body>
+</html>

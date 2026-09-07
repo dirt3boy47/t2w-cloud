@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sign in — T2W Pipeline Register</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="login-wrap">
+    <form class="login-box" id="loginForm">
+      <h1>T2W Pipeline Asset Register</h1>
+      <p class="sub">Sign in with your site office account.</p>
+      <div id="err" class="msg err" style="display:none"></div>
+      <div class="field">
+        <label>Username</label>
+        <input name="username" autocomplete="username" required autofocus>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn" type="submit" style="width:100%">Sign in</button>
+    </form>
+  </div>
+  <script src="/login.js"></script>
+</body>
+</html>

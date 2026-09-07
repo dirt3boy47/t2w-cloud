@@ -1,0 +1,11 @@
+node_modules/
+.wrangler/
+.dev.vars
+.env
+.env.*
+!.env.example
+*.db
+*.db-shm
+*.db-wal
+*.bak
+.DS_Store

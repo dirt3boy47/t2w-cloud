@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>End of day — T2W Pipeline Asset Register</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .eyebrow { font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+             color: var(--muted); font-weight: 600; margin-bottom: 10px; }
+  .crewtabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 18px; }
+  .crewtabs button {
+    background: #fff; border: 1px solid var(--line); border-radius: 999px;
+    padding: 7px 16px; font-size: 13px; cursor: pointer; color: var(--ink);
+  }
+  .crewtabs button.on { background: #16202b; border-color: #16202b; color: #fff; font-weight: 600; }
+  .crewhead { display: flex; justify-content: space-between; align-items: baseline;
+              flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .crewhead h3 { margin: 0; font-size: 17px; }
+  .crewhead .yest { font-size: 12.5px; color: var(--muted); font-weight: 400; margin-left: 10px; }
+  .crewhead .today { font-size: 13px; color: var(--ink); }
+  .trackgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .trackgrid { grid-template-columns: 1fr; } }
+  .trackcard { background: #f7f8fa; border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+  .trackcard .th { display: flex; justify-content: space-between; font-size: 11px;
+                   letter-spacing: .07em; text-transform: uppercase; color: var(--muted);
+                   font-weight: 600; margin-bottom: 8px; }
+  .trackcard .th .was { text-transform: none; letter-spacing: 0; color: #1f6feb; font-weight: 500; }
+  .pairrow { display: flex; align-items: center; gap: 10px; }
+  .pairrow input { background: #fff; }
+  .pairrow .or { font-size: 12px; color: var(--muted); }
+  .gain { font-size: 12px; color: var(--muted); margin-top: 7px; min-height: 16px; }
+  .palead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 18px 0 10px; }
+  .palead .txt { font-size: 13px; }
+  .palead .txt b { font-weight: 600; }
+  .muted { color: var(--muted); }
+  table.crew { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.crew th { text-align: left; font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+                  color: var(--muted); border-bottom: 1px solid var(--line); padding: 8px 10px; }
+  table.crew td { padding: 9px 10px; border-bottom: 1px solid #eef1f4; }
+  table.crew tr:nth-child(even) td { background: #f7fafc; }
+  table.crew td.r, table.crew th.r { text-align: right; }
+  .notrated { color: var(--muted); }
+  .relocate { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .relocate summary { cursor: pointer; font-size: 13px; color: var(--brand-dark); font-weight: 500; }
+  .relgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+  .crewresources { margin-top: 18px; padding-top: 16px; border-top: 2px solid var(--line); }
+  .crewresources h4 { margin: 0; font-size: 15px; }
+  .resourcehead { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+  .resourcehint { font-size:12px; color:var(--muted); margin-top:4px; }
+  .dayactions { display:flex; justify-content:flex-end; gap:8px; align-items:center; }
+  .dayactions .btn { min-width:120px; }
+  @media (max-width: 900px) { .relgrid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <div class="eyebrow">Progress — six crews</div>
+    <p style="font-size:13px;margin:0 0 4px">Each of the six crews (2 sections &times; special crossings /
+      trenchless / standard) keeps its own trench and pipe front. Progress in either direction stays on the
+      same stretch; moving a crew elsewhere is a relocation — it opens a new stretch rather than crediting
+      the ground in between.</p>
+    <p style="font-size:13px;margin:0;color:var(--muted)">Work already behind or ahead of each section's
+      overall completed front, from any crew, is caught up on the catching-up tabs.</p>
+
+    <div id="msg" style="margin-top:12px"></div>
+
+    <div class="grid cols-4" style="margin-top:12px">
+      <div class="field"><label>Date</label><input id="fDate" type="date"></div>
+      <div class="field"><label>Shift</label><select id="fShift"><option>Day</option><option>Night</option></select></div>
+      <div class="field"><label>Weather</label>
+        <select id="fWeather"><option>Fine</option><option>Overcast</option><option>Rain</option>
+          <option>Wet underfoot</option><option>Hot</option><option>Windy</option></select></div>
+      <div class="field"><label>Downtime (hrs)</label><input id="fDowntime" type="number" step="0.5" value="0"></div>
+    </div>
+
+    <div class="crewtabs" id="crewTabs"></div>
+    <div id="crewPanel"></div>
+
+    <div class="field" style="margin-top:16px"><label>Notes</label><textarea id="fNotes" rows="2"></textarea></div>
+  </div>
+
+  <div class="card">
+    <h2>Safety</h2>
+    <div class="grid cols-4">
+      <div class="field"><label>Toolbox held</label>
+        <select id="sfToolbox"><option>No</option><option>Yes</option></select></div>
+      <div class="field" style="grid-column:span 2"><label>Toolbox topic</label><input id="sfTopic"></div>
+      <div class="field"><label>Personnel on site</label><input id="sfPersonnel" type="number"></div>
+      <div class="field"><label>Incident class</label>
+        <select id="sfIncClass"><option>None</option><option>Near miss</option><option>First aid</option>
+          <option>Medical treatment</option><option>Lost time</option></select></div>
+      <div class="field" style="grid-column:span 2"><label>Incident detail</label><input id="sfIncDetail"></div>
+      <div class="field"><label>Lost time (hrs)</label><input id="sfLostTime" type="number" step="0.5" value="0"></div>
+    </div>
+    <button class="btn secondary" id="btnSaveSafety">Save safety for the day</button>
+  </div>
+
+  <div class="card">
+    <h2>Hold points</h2>
+    <div class="grid cols-4">
+      <div class="field"><label>Reference</label><input id="hpRef"></div>
+      <div class="field" style="grid-column:span 2"><label>Description</label><input id="hpDesc"></div>
+      <div class="field"><label>Record key (optional)</label><input id="hpKey"></div>
+    </div>
+    <button class="btn secondary" id="btnAddHP">Add hold point</button>
+    <div class="table-wrap" style="margin-top:10px">
+      <table class="data" id="hpTable">
+        <thead><tr><th>Date</th><th>Reference</th><th>Description</th><th>Status</th><th>Record key</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="dayactions">
+      <button class="btn secondary" id="btnRefresh">Reload</button>
+      <button class="btn" id="btnSave">Save day</button>
+    </div>
+  </div>
+</main>
+
+<script src="/t2w.js"></script>
+<script>
+let STATE = [];          // crew state from the server
+let TABS = [];           // [{id,label,kind:'crew'|'catch',section,crew}]
+let active = null;
+let targets = {};        // "section|crew|track" -> reached chainage typed today
+let ticked = {};         // recordKey -> bool
+let newGround = {};      // tabId -> asset rows currently listed
+const LABEL = { special_crossing: 'Special crossings', trenchless: 'Trenchless crossing', standard: 'Standard' };
+const m1 = (v) => T2W.num(v, 1);
+
+function tkey(section, crew, track) { return section + '|' + crew + '|' + track; }
+function sectionOf(id) { return STATE.find((s) => s.section === id); }
+
+function buildTabs() {
+  TABS = [];
+  for (const s of STATE) {
+    for (const c of s.crews) {
+      TABS.push({ id: s.section + '_' + c.crew, kind: 'crew', label: s.section + ' · ' + c.label,
+                  section: s.section, crew: c.crew });
+    }
+  }
+  for (const s of STATE) {
+    TABS.push({ id: s.section + '_catch', kind: 'catch', label: s.section + ' · catching up',
+                section: s.section });
+  }
+  if (!active || !TABS.find((t) => t.id === active)) active = TABS[0] && TABS[0].id;
+  document.getElementById('crewTabs').innerHTML = TABS.map((t) =>
+    `<button data-tab="${t.id}" class="${t.id === active ? 'on' : ''}">${T2W.esc(t.label)}</button>`).join('');
+  document.querySelectorAll('#crewTabs button').forEach((b) => {
+    b.addEventListener('click', () => { active = b.dataset.tab; buildTabs(); renderPanel(); });
+  });
+}
+
+function trackCard(section, crew, track, position) {
+  const was = position == null ? 0 : position;
+  const k = tkey(section, crew, track);
+  const reached = targets[k];
+  const gain = reached == null || reached === '' ? null : Number(reached) - was;
+  return `
+    <div class="trackcard">
+      <div class="th"><span>${track}</span><span class="was">was ${m1(was)} m</span></div>
+      <div class="pairrow">
+        <input type="number" step="0.1" placeholder="reached ch" data-k="${k}" data-mode="abs"
+               value="${reached ?? ''}">
+        <span class="or">or</span>
+        <input type="number" step="0.1" placeholder="±m today" data-k="${k}" data-mode="rel"
+               value="${gain == null ? '' : gain}">
+      </div>
+      <div class="gain">${gain == null ? '' : (gain >= 0 ? '+' : '') + m1(gain) + ' m of ' + track}</div>
+    </div>`;
+}
+
+function assetRow(a, checkedDefault) {
+  const key = a.recordKey;
+  if (ticked[key] === undefined) ticked[key] = checkedDefault;
+  const item = [a.tbItem, a.bendType, a.valveType, a.utility, a.feature]
+    .filter(Boolean).join(' · ');
+  return `<tr>
+    <td style="width:34px"><input type="checkbox" data-tick="${T2W.esc(key)}" ${ticked[key] ? 'checked' : ''}></td>
+    <td>${T2W.esc(key)}</td>
+    <td class="r">${m1(a.chainage)}</td>
+    <td>${T2W.esc(a.driver || '')}</td>
+    <td>${T2W.esc(a.assetType || a.register || '')}</td>
+    <td>${T2W.esc(item)}</td>
+    <td class="r">${a.cost == null ? '<span class="notrated">not rated</span>' : T2W.money(a.cost)}</td>
+  </tr>`;
+}
+
+function assetTable(rows, leadHtml) {
+  return `${leadHtml}
+    <table class="crew">
+      <thead><tr><th></th><th>Record</th><th class="r">Chainage m</th><th>Driver</th>
+        <th>Asset type</th><th>Type / item</th><th class="r">Cost</th></tr></thead>
+      <tbody>${rows.map((a) => assetRow(a, true)).join('')}</tbody>
+    </table>`;
+}
+
+async function renderPanel() {
+  const tab = TABS.find((t) => t.id === active);
+  const host = document.getElementById('crewPanel');
+  if (!tab) { host.innerHTML = ''; return; }
+
+  if (tab.kind === 'catch') {
+    const rows = await T2W.api('/crews/catching-up?section=' + encodeURIComponent(tab.section));
+    const val = rows.reduce((a, r) => a + (r.cost || 0), 0);
+    host.innerHTML = `
+      <div class="crewhead"><h3>${T2W.esc(tab.section)} — catching up</h3></div>
+      <div class="palead"><div class="txt">
+        <b>${rows.length}</b> asset(s) sitting in ground any crew has completed, not yet ticked
+        ${val ? ' · ' + T2W.money(val) : ''}</div>
+        <button class="btn secondary" id="tickAll">Tick all</button>
+        <button class="btn secondary" id="untickAll">Untick all</button></div>
+      ${rows.length ? assetTable(rows, '') : '<div class="count">Nothing outstanding behind the fronts.</div>'}`;
+    newGround[tab.id] = rows;
+    wireTicks(rows);
+    return;
+  }
+
+  const sec = sectionOf(tab.section);
+  const crew = sec.crews.find((c) => c.crew === tab.crew);
+  const tPos = crew.tracks.trench.position;
+  const pPos = crew.tracks.pipe.position;
+  const tReached = targets[tkey(tab.section, tab.crew, 'trench')];
+  const pReached = targets[tkey(tab.section, tab.crew, 'pipe')];
+  const tGain = tReached == null || tReached === '' ? 0 : Number(tReached) - (tPos ?? 0);
+  const pGain = pReached == null || pReached === '' ? 0 : Number(pReached) - (pPos ?? 0);
+
+  // assets in the ground gained today, per track
+  let rows = [];
+  for (const [track, from, to] of [['trench', tPos ?? 0, tReached], ['pipe', pPos ?? 0, pReached]]) {
+    if (to == null || to === '' || Number(to) === from) continue;
+    const got = await T2W.api(`/crews/new-ground?section=${encodeURIComponent(tab.section)}` +
+      `&crew=${tab.crew}&track=${track}&from=${from}&to=${Number(to)}`);
+    rows = rows.concat(got);
+  }
+  rows.sort((a, b) => a.chainage - b.chainage);
+  newGround[tab.id] = rows;
+  const val = rows.reduce((a, r) => a + (r.cost || 0), 0);
+  const on = rows.filter((r) => ticked[r.recordKey] !== false).length;
+
+  host.innerHTML = `
+    <div class="crewhead">
+      <h3>${T2W.esc(tab.section)} — ${T2W.esc(LABEL[tab.crew])}
+        <span class="yest">was: trench ${m1(tPos ?? 0)} m · pipe ${m1(pPos ?? 0)} m</span></h3>
+      <div class="today">today: ${tGain >= 0 ? '+' : ''}${m1(tGain)} m trench ·
+        ${pGain >= 0 ? '+' : ''}${m1(pGain)} m pipe</div>
+    </div>
+    <div class="trackgrid">
+      ${trackCard(tab.section, tab.crew, 'trench', tPos)}
+      ${trackCard(tab.section, tab.crew, 'pipe', pPos)}
+    </div>
+    <div class="palead">
+      <div class="txt"><b>${on}</b> of <b>${rows.length}</b>
+        <span class="muted">point assets in the new ground complete</span>
+        ${val ? ' · ' + T2W.money(val) : ''}</div>
+      ${rows.length ? `<button class="btn secondary" id="tickAll">Tick all</button>
+      <button class="btn secondary" id="untickAll">Untick all</button>` : ''}
+    </div>
+    ${rows.length ? assetTable(rows, '') :
+      '<div class="count">Type a chainage above to see what falls in the new ground.</div>'}
+
+    <details class="relocate">
+      <summary>Set opening chainage (relocate this crew)</summary>
+      <div class="count" style="margin:8px 0">A relocation closes the stretch this crew is on and opens a
+        new one where you type, so the ground in between is never credited as done.</div>
+      <div class="relgrid">
+        <div class="field"><label>Track</label>
+          <select id="relTrack"><option value="trench">trench</option><option value="pipe">pipe</option></select></div>
+        <div class="field"><label>New opening chainage (m)</label><input id="relCh" type="number" step="0.1"></div>
+        <div class="field" style="display:flex;align-items:end">
+          <button class="btn secondary" id="relGo">Relocate crew</button></div>
+      </div>
+    </details>
+
+    <div class="crewresources">
+      <div class="resourcehead">
+        <div>
+          <h4>Plant and labour — ${T2W.esc(LABEL[tab.crew])}</h4>
+          <div class="resourcehint">Plant and labour is saved against this crew. The drop-downs reuse items from previous days.</div>
+        </div>
+        <button class="btn secondary" id="btnCarryCrew">Bring previous crew forward</button>
+      </div>
+      <div class="grid cols-4">
+        <div class="field"><label>Type</label><select id="plType"><option value="">Select type</option></select></div>
+        <div class="field"><label>Description</label><select id="plDescription"><option value="">Select previous item</option></select></div>
+        <div class="field"><label>Number</label><input id="plNumber" type="number" min="0" step="1" value="1"></div>
+        <div class="field"><label>Hours</label><input id="plHours" type="number" min="0" step="0.25"></div>
+      </div>
+      <button class="btn secondary" id="btnAddPL">Add to this crew</button>
+      <div class="table-wrap" style="margin-top:10px">
+        <table class="data" id="plTable">
+          <thead><tr><th>Type</th><th>Description</th><th>Number</th><th>Hours</th><th>Standby</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>`;
+
+  wireInputs();
+  wireTicks(rows);
+  const rg = document.getElementById('relGo');
+  if (rg) rg.addEventListener('click', async () => {
+    const ch = document.getElementById('relCh').value;
+    if (ch === '') return;
+    if (!confirm('Relocate this crew? The current stretch is closed and a new one opens at ' + ch + ' m.')) return;
+    await T2W.api('/crews/set-opening', { method: 'POST', body: {
+      section: tab.section, crew: tab.crew, track: document.getElementById('relTrack').value,
+      chainage: Number(ch), date: document.getElementById('fDate').value } });
+    delete targets[tkey(tab.section, tab.crew, document.getElementById('relTrack').value)];
+    await loadCrews();
+  });
+
+  await loadPlantLabourForCrew(tab);
+}
+
+function wireInputs() {
+  document.querySelectorAll('#crewPanel input[data-k]').forEach((inp) => {
+    inp.addEventListener('change', () => {
+      const k = inp.dataset.k;
+      const [section, crew, track] = k.split('|');
+      const sec = sectionOf(section);
+      const pos = sec.crews.find((c) => c.crew === crew).tracks[track].position ?? 0;
+      if (inp.value === '') { delete targets[k]; }
+      else if (inp.dataset.mode === 'abs') { targets[k] = Number(inp.value); }
+      else { targets[k] = pos + Number(inp.value); }
+      renderPanel();
+    });
+  });
+}
+
+function wireTicks(rows) {
+  document.querySelectorAll('#crewPanel input[data-tick]').forEach((cb) => {
+    cb.addEventListener('change', () => { ticked[cb.dataset.tick] = cb.checked; renderCounts(rows); });
+  });
+  const all = document.getElementById('tickAll'), none = document.getElementById('untickAll');
+  if (all) all.addEventListener('click', () => { rows.forEach((r) => (ticked[r.recordKey] = true)); renderPanel(); });
+  if (none) none.addEventListener('click', () => { rows.forEach((r) => (ticked[r.recordKey] = false)); renderPanel(); });
+}
+
+function renderCounts(rows) {
+  const on = rows.filter((r) => ticked[r.recordKey]).length;
+  const lead = document.querySelector('#crewPanel .palead .txt b');
+  if (lead) lead.textContent = on;
+}
+
+async function loadCrews() {
+  STATE = await T2W.api('/crews');
+  buildTabs();
+  await renderPanel();
+}
+
+async function saveDay() {
+  const msg = document.getElementById('msg');
+  const moves = [];
+  for (const [k, v] of Object.entries(targets)) {
+    if (v == null || v === '') continue;
+    const [section, crew, track] = k.split('|');
+    moves.push({ section, crew, track, reachedCh: Number(v) });
+  }
+  const completeKeys = Object.entries(ticked).filter(([, v]) => v).map(([k]) => k);
+  try {
+    const r = await T2W.api('/crews/save-day', { method: 'POST', body: {
+      date: document.getElementById('fDate').value,
+      shift: document.getElementById('fShift').value,
+      weather: document.getElementById('fWeather').value,
+      downtime: Number(document.getElementById('fDowntime').value || 0),
+      notes: document.getElementById('fNotes').value,
+      moves, completeKeys } });
+    msg.innerHTML = `<div class="msg ok">Day saved. ${r.moves.length} crew move(s),
+      ${r.ticked} asset(s) ticked. Earned ${T2W.money(r.earned)}, direct cost ${T2W.money(r.cost)},
+      plant &amp; labour ${T2W.money(r.plantAndLabour)}, profit ${T2W.money(r.profit)}.</div>`;
+    targets = {}; ticked = {};
+    await loadCrews();
+  } catch (e) {
+    msg.innerHTML = `<div class="msg err">${T2W.esc(e.message)}</div>`;
+  }
+}
+
+// ---- the day's other panels ------------------------------------------------
+async function loadPlantLabourForCrew(tab) {
+  if (!tab || tab.kind !== 'crew' || !document.getElementById('plTable')) return;
+  const date = document.getElementById('fDate').value;
+  const params = `date=${encodeURIComponent(date)}&section=${encodeURIComponent(tab.section)}&crew=${encodeURIComponent(tab.crew)}`;
+  const [rows, options] = await Promise.all([
+    T2W.api('/plant-labour?' + params),
+    T2W.api('/plant-labour/options?' + params),
+  ]);
+
+  const typeSel = document.getElementById('plType');
+  const descSel = document.getElementById('plDescription');
+  const currentType = typeSel.value;
+  const currentDesc = descSel.value;
+  const types = [...new Set(options.map((o) => o.Type).filter(Boolean))];
+  typeSel.innerHTML = '<option value="">Select type</option>' +
+    types.map((v) => `<option value="${T2W.esc(v)}">${T2W.esc(v)}</option>`).join('');
+  if (types.includes(currentType)) typeSel.value = currentType;
+
+  function fillDescriptions() {
+    const typ = typeSel.value;
+    const choices = options.filter((o) => !typ || o.Type === typ);
+    const seen = new Set();
+    const unique = choices.filter((o) => {
+      const k = `${o.Type || ''}|${o.Description || ''}`;
+      if (!o.Description || seen.has(k)) return false;
+      seen.add(k); return true;
+    });
+    descSel.innerHTML = '<option value="">Select previous item</option>' + unique.map((o) => {
+      const when = o.lastUsed ? ` · last ${o.lastUsed}` : '';
+      return `<option value="${T2W.esc(o.Description)}">${T2W.esc(o.Description + when)}</option>`;
+    }).join('');
+    if (unique.some((o) => o.Description === currentDesc)) descSel.value = currentDesc;
+  }
+  fillDescriptions();
+  typeSel.onchange = () => { fillDescriptions(); };
+  descSel.onchange = () => {
+    const match = options.find((o) => o.Description === descSel.value && (!typeSel.value || o.Type === typeSel.value));
+    if (!match) return;
+    if (!typeSel.value && match.Type) { typeSel.value = match.Type; fillDescriptions(); descSel.value = match.Description; }
+    document.getElementById('plNumber').value = match.Number ?? 1;
+    document.getElementById('plHours').value = match.Hours ?? '';
+  };
+
+  document.querySelector('#plTable tbody').innerHTML = rows.map((r) => `
+    <tr><td>${T2W.esc(r.Type)}</td><td>${T2W.esc(r.Description)}</td>
+      <td>${T2W.num(r.Number)}</td><td>${m1(r.Hours)}</td><td>${m1(r['Standby Hours'])}</td>
+      <td><button class="btn secondary" data-del-pl="${r._id}" style="padding:2px 8px">Remove</button></td></tr>
+  `).join('');
+  document.querySelectorAll('[data-del-pl]').forEach((b) => b.addEventListener('click', async () => {
+    await T2W.api('/plant-labour/' + b.dataset.delPl, { method: 'DELETE' });
+    await loadPlantLabourForCrew(tab);
+  }));
+
+  document.getElementById('btnAddPL').onclick = async () => {
+    const type = typeSel.value;
+    const description = descSel.value;
+    if (!type || !description) {
+      document.getElementById('msg').innerHTML = '<div class="msg err">Choose a plant or labour type and description first.</div>';
+      return;
+    }
+    await T2W.api('/plant-labour', { method: 'POST', body: {
+      Date: date, 'Pipeline Section': tab.section, Crew: tab.crew,
+      Type: type, Description: description,
+      Number: Number(document.getElementById('plNumber').value || 1),
+      Hours: Number(document.getElementById('plHours').value || 0) } });
+    document.getElementById('plHours').value = '';
+    await loadPlantLabourForCrew(tab);
+  };
+
+  document.getElementById('btnCarryCrew').onclick = async () => {
+    const msg = document.getElementById('msg');
+    try {
+      const r = await T2W.api('/plant-labour/carry-forward', { method: 'POST', body: {
+        date, section: tab.section, crew: tab.crew } });
+      msg.innerHTML = `<div class="msg ok">Brought ${r.count} line(s) forward for ${T2W.esc(LABEL[tab.crew])} from ${T2W.esc(r.from)}.</div>`;
+      await loadPlantLabourForCrew(tab);
+    } catch (e) {
+      msg.innerHTML = `<div class="msg err">${T2W.esc(e.message)}</div>`;
+    }
+  };
+}
+
+async function loadHoldPoints() {
+  const rows = await T2W.api('/hold-points');
+  document.querySelector('#hpTable tbody').innerHTML = rows.map((r) => `
+    <tr><td>${T2W.esc(r.Date)}</td><td>${T2W.esc(r.Reference)}</td><td>${T2W.esc(r.Description)}</td>
+      <td>${T2W.esc(r.Status)}</td><td>${T2W.esc(r['Record Key'] || '')}</td>
+      <td style="display:flex;gap:4px">
+        ${r.Status !== 'Released' ? `<button class="btn secondary" data-release="${r._id}" style="padding:2px 8px">Release</button>` : ''}
+        <button class="btn secondary" data-del-hp="${r._id}" style="padding:2px 8px">Remove</button></td></tr>`).join('');
+  document.querySelectorAll('[data-release]').forEach((b) => b.addEventListener('click', async () => {
+    await T2W.api('/hold-points/' + b.dataset.release, { method: 'PUT', body: { Status: 'Released' } });
+    loadHoldPoints(); }));
+  document.querySelectorAll('[data-del-hp]').forEach((b) => b.addEventListener('click', async () => {
+    await T2W.api('/hold-points/' + b.dataset.delHp, { method: 'DELETE' }); loadHoldPoints(); }));
+}
+async function loadSafety() {
+  const date = document.getElementById('fDate').value;
+  const r = await T2W.api('/daily-safety?date=' + encodeURIComponent(date));
+  document.getElementById('sfToolbox').value = r ? r['Toolbox Held'] || 'No' : 'No';
+  document.getElementById('sfTopic').value = r ? r['Toolbox Topic'] || '' : '';
+  document.getElementById('sfPersonnel').value = r ? r['Personnel On Site'] ?? '' : '';
+  document.getElementById('sfIncClass').value = r ? r['Incident Class'] || 'None' : 'None';
+  document.getElementById('sfIncDetail').value = r ? r['Incident Detail'] || '' : '';
+  document.getElementById('sfLostTime').value = r ? r['Lost Time (hrs)'] || 0 : 0;
+}
+
+(async () => {
+  await T2W.mount();
+  document.getElementById('fDate').value = T2W.todayISO();
+  await loadCrews();
+  await loadHoldPoints(); await loadSafety();
+
+  document.getElementById('fDate').addEventListener('change', () => { renderPanel(); loadSafety(); });
+  document.getElementById('btnSave').addEventListener('click', saveDay);
+  document.getElementById('btnRefresh').addEventListener('click', loadCrews);
+  document.getElementById('btnSaveSafety').addEventListener('click', async () => {
+    await T2W.api('/daily-safety', { method: 'POST', body: {
+      Date: document.getElementById('fDate').value,
+      'Toolbox Held': document.getElementById('sfToolbox').value,
+      'Toolbox Topic': document.getElementById('sfTopic').value,
+      'Personnel On Site': document.getElementById('sfPersonnel').value || null,
+      'Incident Class': document.getElementById('sfIncClass').value,
+      'Incident Detail': document.getElementById('sfIncDetail').value,
+      'Lost Time (hrs)': Number(document.getElementById('sfLostTime').value || 0) } });
+    document.getElementById('msg').innerHTML = '<div class="msg ok">Safety saved.</div>';
+  });
+  document.getElementById('btnAddHP').addEventListener('click', async () => {
+    await T2W.api('/hold-points', { method: 'POST', body: {
+      Date: document.getElementById('fDate').value,
+      Reference: document.getElementById('hpRef').value,
+      Description: document.getElementById('hpDesc').value,
+      'Record Key': document.getElementById('hpKey').value || null, Status: 'Open' } });
+    ['hpRef', 'hpDesc', 'hpKey'].forEach((i) => (document.getElementById(i).value = ''));
+    loadHoldPoints();
+  });
+})();
+</script>
+</body>
+</html>

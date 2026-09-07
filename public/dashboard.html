@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cost dashboard — T2W Pipeline Asset Register</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <div class="card">
+    <h2>Project position</h2>
+    <div class="grid cols-4" id="kpis"></div>
+  </div>
+
+  <div class="card">
+    <h2>Trench, by section and type</h2>
+    <div class="table-wrap"><table class="data" id="trenchTable">
+      <thead><tr><th>Section</th><th>Trench type</th><th>Sections</th><th>Length (m)</th>
+        <th>Rate</th><th>Budget</th><th>Complete (m)</th><th>Earned</th><th>Remaining</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <h2>Pipe, by section and asset</h2>
+    <div class="table-wrap"><table class="data" id="pipeTable">
+      <thead><tr><th>Section</th><th>Pipe type</th><th>Segments</th><th>Length (m)</th>
+        <th>Rate</th><th>Budget</th><th>Laid (m)</th><th>Earned</th><th>Remaining</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <h2>Point assets, by section and register</h2>
+    <div class="table-wrap"><table class="data" id="pointTable">
+      <thead><tr><th>Section</th><th>Register</th><th>Asset type</th><th>Records</th>
+        <th>Budget</th><th>Earned</th><th>Remaining</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <h2>Not yet priced</h2>
+    <div class="table-wrap"><table class="data" id="unpricedTable">
+      <thead><tr><th>Section</th><th>Register</th><th>Asset type</th><th>Records</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</main>
+
+<script src="/t2w.js"></script>
+<script>
+(async () => {
+  await T2W.mount();
+  const t = await T2W.api('/dashboard/totals');
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="label">Trench earned / budget</div>
+      <div class="value">${T2W.money(t.trench.earned)}</div>
+      <div class="count">of ${T2W.money(t.trench.budget)}</div></div>
+    <div class="kpi"><div class="label">Pipe earned / budget</div>
+      <div class="value">${T2W.money(t.pipe.earned)}</div>
+      <div class="count">of ${T2W.money(t.pipe.budget)}</div></div>
+    <div class="kpi"><div class="label">Point assets earned / budget</div>
+      <div class="value">${T2W.money(t.point.earned)}</div>
+      <div class="count">of ${T2W.money(t.point.budget)}</div></div>
+    <div class="kpi"><div class="label">Project total earned / budget</div>
+      <div class="value">${T2W.money(t.total.earned)}</div>
+      <div class="count">of ${T2W.money(t.total.budget)}</div></div>
+  `;
+
+  const trench = await T2W.api('/dashboard/by-trench-type');
+  document.querySelector('#trenchTable tbody').innerHTML = trench.map((r) => `
+    <tr><td>${T2W.esc(r.section)}</td><td>${T2W.esc(r.trenchType)}</td><td>${r.sections}</td>
+      <td>${T2W.num(r.length)}</td><td>${T2W.money(r.rate)}</td><td>${T2W.money(r.budget)}</td>
+      <td>${T2W.num(r.complete)}</td><td>${T2W.money(r.earned)}</td><td>${T2W.money(r.remaining)}</td></tr>
+  `).join('');
+
+  const pipe = await T2W.api('/dashboard/by-pipe-type');
+  document.querySelector('#pipeTable tbody').innerHTML = pipe.map((r) => `
+    <tr><td>${T2W.esc(r.section)}</td><td>${T2W.esc(r.pipeType)}</td><td>${r.segments}</td>
+      <td>${T2W.num(r.length)}</td><td>${T2W.money(r.rate)}</td><td>${T2W.money(r.budget)}</td>
+      <td>${T2W.num(r.laid)}</td><td>${T2W.money(r.earned)}</td><td>${T2W.money(r.remaining)}</td></tr>
+  `).join('');
+
+  const point = await T2W.api('/dashboard/by-point-asset');
+  document.querySelector('#pointTable tbody').innerHTML = point.map((r) => `
+    <tr><td>${T2W.esc(r.section)}</td><td>${T2W.esc(r.register)}</td><td>${T2W.esc(r.assetType)}</td>
+      <td>${r.records}</td><td>${T2W.money(r.budget)}</td><td>${T2W.money(r.earned)}</td>
+      <td>${T2W.money(r.remaining)}</td></tr>
+  `).join('');
+
+  const unpriced = await T2W.api('/dashboard/unpriced');
+  document.querySelector('#unpricedTable tbody').innerHTML = unpriced.map((r) => `
+    <tr><td>${T2W.esc(r.section)}</td><td>${T2W.esc(r.register)}</td><td>${T2W.esc(r.assetType)}</td>
+      <td>${r.records}</td></tr>
+  `).join('');
+})();
+</script>
+</body>
+</html>

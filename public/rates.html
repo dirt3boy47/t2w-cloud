@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rate library — T2W Pipeline Asset Register</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <div class="card">
+    <h2>Rate library — the one place a rate is entered</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn secondary tab" data-t="trench">Trench</button>
+      <button class="btn secondary tab" data-t="pipe">Pipe</button>
+      <button class="btn secondary tab" data-t="point">Point assets</button>
+      <button class="btn secondary tab" data-t="thrustblock">Thrust blocks</button>
+      <button class="btn secondary tab" data-t="bend">Bends</button>
+      <button class="btn secondary tab" data-t="valve">Valves</button>
+      <button class="btn secondary tab" data-t="plantlabour">Plant &amp; labour</button>
+    </div>
+  </div>
+  <div class="card">
+    <div id="msg"></div>
+    <div class="table-wrap"><table class="data" id="rateTable">
+      <thead></thead><tbody></tbody>
+    </table></div>
+  </div>
+</main>
+
+<script src="/t2w.js"></script>
+<script>
+let currentTable = 'trench';
+
+async function load(t) {
+  currentTable = t;
+  document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('btn', b.dataset.t === t));
+  const rows = await T2W.api('/rates/' + t);
+  const thead = document.querySelector('#rateTable thead');
+  const tbody = document.querySelector('#rateTable tbody');
+  if (!rows.length) { thead.innerHTML = ''; tbody.innerHTML = '<tr><td>No rows.</td></tr>'; return; }
+  const cols = Object.keys(rows[0]).filter((c) => c !== '_id');
+  thead.innerHTML = '<tr>' + cols.map((c) => `<th>${T2W.esc(c)}</th>`).join('') + '</tr>';
+  tbody.innerHTML = rows.map((r) => '<tr data-id="' + r._id + '">' +
+    cols.map((c) => {
+      const editable = c.toLowerCase().includes('rate');
+      return `<td>${editable
+        ? `<input data-col="${T2W.esc(c)}" value="${T2W.esc(r[c] ?? '')}" style="width:90px">`
+        : T2W.esc(r[c] ?? '')}</td>`;
+    }).join('') + '</tr>').join('');
+
+  tbody.querySelectorAll('input').forEach((inp) => {
+    inp.addEventListener('change', async () => {
+      const id = inp.closest('tr').dataset.id;
+      try {
+        await T2W.api(`/rates/${currentTable}/${id}`, { method: 'PUT', body: { [inp.dataset.col]: inp.value } });
+        document.getElementById('msg').innerHTML = '<div class="msg ok">Rate updated.</div>';
+      } catch (e) {
+        document.getElementById('msg').innerHTML = `<div class="msg err">${T2W.esc(e.message)}</div>`;
+      }
+    });
+  });
+}
+
+(async () => {
+  await T2W.mount();
+  document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => load(b.dataset.t)));
+  load('trench');
+})();
+</script>
+</body>
+</html>

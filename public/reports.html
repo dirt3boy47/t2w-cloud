@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Reports — T2W Pipeline Asset Register</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .rpnav { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 14px; }
+  .rpnav button {
+    background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px;
+    font-size: 12.5px; cursor: pointer; color: var(--muted);
+  }
+  .rpnav button.on { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 500; }
+  .rpctl { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin-bottom: 12px; }
+  .rpctl .field { margin-bottom: 0; min-width: 140px; }
+  @media print {
+    .topbar, .rpnav, .rpctl, .noprint { display: none !important; }
+    .card { border: none; padding: 0; }
+    body { background: #fff; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="card noprint">
+    <h2>Reports</h2>
+    <div class="rpnav" id="rpNav">
+      <button data-rp="dash" class="on">Position</button>
+      <button data-rp="daily">A day</button>
+      <button data-rp="prod">Production</button>
+      <button data-rp="look">Look-ahead</button>
+      <button data-rp="qty">Quantities</button>
+      <button data-rp="out">Outstanding</button>
+      <button data-rp="done">Completed</button>
+      <button data-rp="safe">Safety &amp; plant</button>
+    </div>
+    <div class="rpctl" id="rpCtl"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn secondary" id="btnPrint">Print</button>
+      <button class="btn secondary" id="btnCsv">Export CSV</button>
+    </div>
+  </div>
+  <div class="card" id="rpOut"></div>
+</main>
+
+<script src="/t2w.js"></script>
+<script>
+let RP = 'dash';
+let lastRows = [];      // whatever the current view last rendered, for CSV
+let lastCols = [];
+
+const T = (rows, cols) => {
+  lastRows = rows; lastCols = cols;
+  if (!rows.length) return '<div class="count">Nothing to show for this selection.</div>';
+  return `<div class="table-wrap"><table class="data">
+    <thead><tr>${cols.map((c) => `<th>${T2W.esc(c.label)}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map((r) => `<tr>${cols.map((c) => `<td>${c.fmt ? c.fmt(r[c.key], r) : T2W.esc(r[c.key] ?? '')}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table></div>`;
+};
+const money = (v) => T2W.money(v);
+const num = (v) => T2W.num(v);
+const num1 = (v) => T2W.num(v, 1);
+
+function ctl(html) { document.getElementById('rpCtl').innerHTML = html; }
+function out(html) { document.getElementById('rpOut').innerHTML = html; }
+
+const VIEWS = {
+  // ---------------------------------------------------------------- position
+  async dash() {
+    ctl('');
+    const t = await T2W.api('/dashboard/totals');
+    const pc = await T2W.api('/progress-control');
+    const kpi = (label, val, sub) =>
+      `<div class="kpi"><div class="label">${label}</div><div class="value">${val}</div>
+       ${sub ? `<div class="count">${sub}</div>` : ''}</div>`;
+    const pctOf = (a, b) => b ? Math.round((a / b) * 100) + '%' : '0%';
+    out(`
+      <h2>Project position</h2>
+      <div class="grid cols-4" style="margin-bottom:18px">
+        ${kpi('Trench', money(t.trench.earned), 'of ' + money(t.trench.budget) + ' · ' + pctOf(t.trench.earned, t.trench.budget))}
+        ${kpi('Pipe', money(t.pipe.earned), 'of ' + money(t.pipe.budget) + ' · ' + pctOf(t.pipe.earned, t.pipe.budget))}
+        ${kpi('Point assets', money(t.point.earned), 'of ' + money(t.point.budget) + ' · ' + pctOf(t.point.earned, t.point.budget))}
+        ${kpi('Project total', money(t.total.earned), 'of ' + money(t.total.budget) + ' · ' + pctOf(t.total.earned, t.total.budget))}
+      </div>
+      <h2>The two fronts</h2>
+      ${T(pc, [
+        { key: 'Pipeline Section', label: 'Section' },
+        { key: 'Section extent (m)', label: 'Extent (m)', fmt: num },
+        { key: 'TRENCH', label: 'Trench front (m)', fmt: num },
+        { key: 'PIPE', label: 'Pipe front (m)', fmt: num },
+        { key: 'TRENCH', label: 'Trench %', fmt: (v, r) => pctOf(v, r['Section extent (m)']) },
+        { key: 'PIPE', label: 'Pipe %', fmt: (v, r) => pctOf(v, r['Section extent (m)']) },
+        { key: 'As At Date', label: 'As at' },
+      ])}`);
+  },
+
+  // ---------------------------------------------------------------- a day
+  async daily() {
+    ctl(`<div class="field"><label>Date</label><input id="cDate" type="date" value="${T2W.todayISO()}"></div>
+         <button class="btn" id="cGo">Show</button>`);
+    document.getElementById('cGo').addEventListener('click', () => VIEWS.dailyRender());
+    await VIEWS.dailyRender();
+  },
+  async dailyRender() {
+    const date = document.getElementById('cDate').value;
+    const d = await T2W.api('/reports/day?date=' + encodeURIComponent(date));
+    const s = d.safety;
+    out(`
+      <h2>Day report — ${T2W.esc(date)}</h2>
+      ${d.profit ? `<div class="grid cols-4" style="margin-bottom:16px">
+        <div class="kpi"><div class="label">Earned</div><div class="value">${money(d.profit['Earned ($)'])}</div></div>
+        <div class="kpi"><div class="label">Direct cost</div><div class="value">${money(d.profit['Direct Cost ($)'])}</div></div>
+        <div class="kpi"><div class="label">Plant &amp; labour</div><div class="value">${money(d.profit['Plant and Labour ($)'])}</div></div>
+        <div class="kpi"><div class="label">Profit</div><div class="value">${money(d.profit['Profit ($)'])}</div></div>
+      </div>` : '<div class="count" style="margin-bottom:14px">No day saved for this date.</div>'}
+
+      <h2>Progress</h2>
+      ${T(d.progress, [
+        { key: 'Pipeline Section', label: 'Section' },
+        { key: 'Trench From Ch (m)', label: 'Trench from', fmt: num },
+        { key: 'Trench To Ch (m)', label: 'Trench to', fmt: num },
+        { key: 'Trench m Today', label: 'Trench m', fmt: num },
+        { key: 'Pipe From Ch (m)', label: 'Pipe from', fmt: num },
+        { key: 'Pipe To Ch (m)', label: 'Pipe to', fmt: num },
+        { key: 'Pipe m Today', label: 'Pipe m', fmt: num },
+        { key: 'Earned Today ($)', label: 'Earned', fmt: money },
+        { key: 'Weather', label: 'Weather' },
+        { key: 'Downtime (hrs)', label: 'Downtime', fmt: num1 },
+      ])}
+
+      <h2 style="margin-top:18px">Assets completed on this day</h2>
+      ${T(d.completed, [
+        { key: 'recordKey', label: 'Record key' },
+        { key: 'section', label: 'Section' },
+        { key: 'register', label: 'Register' },
+        { key: 'assetType', label: 'Type' },
+        { key: 'chainage', label: 'Chainage', fmt: num },
+      ])}
+
+      <h2 style="margin-top:18px">Plant and labour</h2>
+      ${T(d.plant, [
+        { key: 'Pipeline Section', label: 'Section' },
+        { key: 'Crew', label: 'Crew' },
+        { key: 'Type', label: 'Type' },
+        { key: 'Description', label: 'Description' },
+        { key: 'Number', label: 'No.', fmt: num },
+        { key: 'Hours', label: 'Hours', fmt: num1 },
+        { key: 'cost', label: 'Cost', fmt: money },
+      ])}
+
+      <h2 style="margin-top:18px">Safety</h2>
+      ${s ? `<div class="grid cols-4">
+        <div><label>Toolbox</label><div>${T2W.esc(s['Toolbox Held'] || 'No')}</div></div>
+        <div><label>Topic</label><div>${T2W.esc(s['Toolbox Topic'] || '—')}</div></div>
+        <div><label>Personnel</label><div>${T2W.esc(s['Personnel On Site'] ?? '—')}</div></div>
+        <div><label>Incident</label><div>${T2W.esc(s['Incident Class'] || 'None')}
+          ${s['Incident Detail'] ? '— ' + T2W.esc(s['Incident Detail']) : ''}</div></div>
+      </div>` : '<div class="count">No safety record for this day.</div>'}
+
+      <h2 style="margin-top:18px">Hold points raised</h2>
+      ${T(d.holdPoints, [
+        { key: 'Reference', label: 'Reference' },
+        { key: 'Description', label: 'Description' },
+        { key: 'Status', label: 'Status' },
+        { key: 'Record Key', label: 'Record key' },
+      ])}`);
+  },
+
+  // ---------------------------------------------------------------- production
+  async prod() {
+    const to = T2W.todayISO();
+    const from = new Date(Date.now() - 27 * 864e5).toISOString().slice(0, 10);
+    ctl(`<div class="field"><label>From</label><input id="cFrom" type="date" value="${from}"></div>
+         <div class="field"><label>To</label><input id="cTo" type="date" value="${to}"></div>
+         <button class="btn" id="cGo">Show</button>`);
+    document.getElementById('cGo').addEventListener('click', () => VIEWS.prodRender());
+    await VIEWS.prodRender();
+  },
+  async prodRender() {
+    const from = document.getElementById('cFrom').value, to = document.getElementById('cTo').value;
+    const d = await T2W.api(`/reports/production?from=${from}&to=${to}`);
+    const t = d.totals;
+    out(`
+      <h2>Production — ${T2W.esc(from)} to ${T2W.esc(to)}</h2>
+      <div class="grid cols-4" style="margin-bottom:16px">
+        <div class="kpi"><div class="label">Days booked</div><div class="value">${t.days}</div></div>
+        <div class="kpi"><div class="label">Trench metres</div><div class="value">${num(t.trenchM)}</div>
+          <div class="count">avg ${num1(t.avgTrenchM)} m/day</div></div>
+        <div class="kpi"><div class="label">Pipe metres</div><div class="value">${num(t.pipeM)}</div>
+          <div class="count">avg ${num1(t.avgPipeM)} m/day</div></div>
+        <div class="kpi"><div class="label">Earned</div><div class="value">${money(t.earned)}</div>
+          <div class="count">downtime ${num1(t.downtime)} h</div></div>
+      </div>
+      ${T(d.rows, [
+        { key: 'date', label: 'Date' },
+        { key: 'section', label: 'Section' },
+        { key: 'trenchM', label: 'Trench m', fmt: num },
+        { key: 'pipeM', label: 'Pipe m', fmt: num },
+        { key: 'earned', label: 'Earned', fmt: money },
+        { key: 'cost', label: 'Direct cost', fmt: money },
+        { key: 'downtime', label: 'Downtime', fmt: num1 },
+      ])}`);
+  },
+
+  // ---------------------------------------------------------------- look-ahead
+  async look() {
+    ctl(`<div class="field"><label>Metres ahead of each front</label>
+           <input id="cM" type="number" value="500" step="100"></div>
+         <button class="btn" id="cGo">Show</button>`);
+    document.getElementById('cGo').addEventListener('click', () => VIEWS.lookRender());
+    await VIEWS.lookRender();
+  },
+  async lookRender() {
+    const m = document.getElementById('cM').value || 500;
+    const rows = await T2W.api('/reports/look-ahead?metres=' + m);
+    out(`<h2>Look-ahead — next ${T2W.esc(m)} m</h2>
+      <div class="count" style="margin-bottom:10px">What each front reaches next, nearest first.
+      Foreign services are not listed: they carry no completion driver, so no front governs them.</div>
+      ${T(rows, [
+        { key: 'ahead', label: 'Metres ahead', fmt: num },
+        { key: 'section', label: 'Section' },
+        { key: 'driver', label: 'Driven by' },
+        { key: 'chainage', label: 'Chainage', fmt: num },
+        { key: 'register', label: 'Register' },
+        { key: 'assetType', label: 'Type' },
+        { key: 'feature', label: 'Feature' },
+        { key: 'budget', label: 'Value', fmt: money },
+      ])}`);
+  },
+
+  // ---------------------------------------------------------------- quantities
+  async qty() {
+    ctl('');
+    const rows = await T2W.api('/reports/quantities');
+    out(`<h2>Quantities</h2>${T(rows, [
+      { key: 'section', label: 'Section' },
+      { key: 'register', label: 'Register' },
+      { key: 'assetType', label: 'Asset type' },
+      { key: 'records', label: 'Records', fmt: num },
+      { key: 'complete', label: 'Complete', fmt: num },
+      { key: 'quantity', label: 'Quantity', fmt: num },
+      { key: 'unit', label: 'Unit' },
+      { key: 'budget', label: 'Budget', fmt: money },
+      { key: 'earned', label: 'Earned', fmt: money },
+    ])}`);
+  },
+
+  // ---------------------------------------------------------------- outstanding
+  async out() {
+    ctl('');
+    const rows = await T2W.api('/reports/outstanding');
+    out(`<h2>Outstanding behind the front</h2>
+      <div class="count" style="margin-bottom:10px">The front has passed these, but nobody has ticked them
+      complete. This list is the reason Auto Complete never overwrites Complete.</div>
+      ${T(rows, [
+        { key: 'section', label: 'Section' },
+        { key: 'chainage', label: 'Chainage', fmt: num },
+        { key: 'driver', label: 'Driven by' },
+        { key: 'register', label: 'Register' },
+        { key: 'assetType', label: 'Type' },
+        { key: 'feature', label: 'Feature' },
+        { key: 'recordKey', label: 'Record key' },
+        { key: 'budget', label: 'Value', fmt: money },
+      ])}`);
+  },
+
+  // ---------------------------------------------------------------- completed
+  async done() {
+    const to = T2W.todayISO();
+    const from = new Date(Date.now() - 27 * 864e5).toISOString().slice(0, 10);
+    ctl(`<div class="field"><label>From</label><input id="cFrom" type="date" value="${from}"></div>
+         <div class="field"><label>To</label><input id="cTo" type="date" value="${to}"></div>
+         <button class="btn" id="cGo">Show</button>`);
+    document.getElementById('cGo').addEventListener('click', () => VIEWS.doneRender());
+    await VIEWS.doneRender();
+  },
+  async doneRender() {
+    const from = document.getElementById('cFrom').value, to = document.getElementById('cTo').value;
+    const rows = await T2W.api(`/reports/completed?from=${from}&to=${to}`);
+    const val = rows.reduce((s, r) => s + (r.budget || 0), 0);
+    out(`<h2>Completed — ${T2W.esc(from)} to ${T2W.esc(to)}</h2>
+      <div class="count" style="margin-bottom:10px">${rows.length} asset(s), ${money(val)} of value.</div>
+      ${T(rows, [
+        { key: 'completionDate', label: 'Completed' },
+        { key: 'section', label: 'Section' },
+        { key: 'chainage', label: 'Chainage', fmt: num },
+        { key: 'register', label: 'Register' },
+        { key: 'assetType', label: 'Type' },
+        { key: 'recordKey', label: 'Record key' },
+        { key: 'budget', label: 'Value', fmt: money },
+      ])}`);
+  },
+
+  // ---------------------------------------------------------------- safety
+  async safe() {
+    const to = T2W.todayISO();
+    const from = new Date(Date.now() - 27 * 864e5).toISOString().slice(0, 10);
+    ctl(`<div class="field"><label>From</label><input id="cFrom" type="date" value="${from}"></div>
+         <div class="field"><label>To</label><input id="cTo" type="date" value="${to}"></div>
+         <button class="btn" id="cGo">Show</button>`);
+    document.getElementById('cGo').addEventListener('click', () => VIEWS.safeRender());
+    await VIEWS.safeRender();
+  },
+  async safeRender() {
+    const from = document.getElementById('cFrom').value, to = document.getElementById('cTo').value;
+    const d = await T2W.api(`/reports/safety-plant?from=${from}&to=${to}`);
+    out(`
+      <h2>Safety — ${T2W.esc(from)} to ${T2W.esc(to)}</h2>
+      ${T(d.safety, [
+        { key: 'Date', label: 'Date' },
+        { key: 'Toolbox Held', label: 'Toolbox' },
+        { key: 'Toolbox Topic', label: 'Topic' },
+        { key: 'Personnel On Site', label: 'Personnel', fmt: num },
+        { key: 'Incident Class', label: 'Incident' },
+        { key: 'Incident Detail', label: 'Detail' },
+        { key: 'Lost Time (hrs)', label: 'Lost time', fmt: num1 },
+      ])}
+      <h2 style="margin-top:18px">Plant and labour</h2>
+      ${T(d.plant, [
+        { key: 'date', label: 'Date' },
+        { key: 'section', label: 'Section' },
+        { key: 'crew', label: 'Crew' },
+        { key: 'type', label: 'Type' },
+        { key: 'description', label: 'Description' },
+        { key: 'hours', label: 'Hours', fmt: num1 },
+        { key: 'cost', label: 'Cost', fmt: money },
+      ])}
+      <h2 style="margin-top:18px">Hold points</h2>
+      ${T(d.holdPoints, [
+        { key: 'Date', label: 'Date' },
+        { key: 'Reference', label: 'Reference' },
+        { key: 'Description', label: 'Description' },
+        { key: 'Status', label: 'Status' },
+      ])}`);
+  },
+};
+
+function toCsv() {
+  if (!lastRows.length) { alert('Nothing to export in this view.'); return; }
+  const head = lastCols.map((c) => `"${c.label}"`).join(',');
+  const body = lastRows.map((r) => lastCols.map((c) => {
+    const v = r[c.key];
+    return `"${String(v ?? '').replace(/"/g, '""')}"`;
+  }).join(',')).join('\n');
+  const blob = new Blob([head + '\n' + body], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `T2W_${RP}_${T2W.todayISO()}.csv`;
+  a.click();
+}
+
+(async () => {
+  await T2W.mount();
+  document.querySelectorAll('#rpNav button').forEach((b) => {
+    b.addEventListener('click', async () => {
+      RP = b.dataset.rp;
+      document.querySelectorAll('#rpNav button').forEach((x) => x.classList.toggle('on', x === b));
+      await VIEWS[RP]();
+    });
+  });
+  document.getElementById('btnPrint').addEventListener('click', () => window.print());
+  document.getElementById('btnCsv').addEventListener('click', toCsv);
+  await VIEWS.dash();
+})();
+</script>
+</body>
+</html>

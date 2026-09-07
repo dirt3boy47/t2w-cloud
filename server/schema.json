@@ -1,0 +1,2665 @@
+[
+ {
+  "table": "tblAsset",
+  "fields": [
+   [
+    "Record Key",
+    "TEXT",
+    255
+   ],
+   [
+    "Chainage Start (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Chainage End (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Length (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Pipeline Section",
+    "TEXT",
+    255
+   ],
+   [
+    "Register",
+    "TEXT",
+    255
+   ],
+   [
+    "Asset Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Asset ID",
+    "TEXT",
+    255
+   ],
+   [
+    "Trench Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Source Length (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Drawing (Start)",
+    "TEXT",
+    255
+   ],
+   [
+    "Drawing (End)",
+    "TEXT",
+    255
+   ],
+   [
+    "Drawing (superseded)",
+    "TEXT",
+    255
+   ],
+   [
+    "Info Source",
+    "TEXT",
+    255
+   ],
+   [
+    "Included in Current Plan",
+    "TEXT",
+    255
+   ],
+   [
+    "Section Ref (source)",
+    "TEXT",
+    255
+   ],
+   [
+    "Feature Name",
+    "TEXT",
+    255
+   ],
+   [
+    "Utility Description",
+    "TEXT",
+    255
+   ],
+   [
+    "Surface",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipeline DN",
+    "LONG",
+    0
+   ],
+   [
+    "Embankment Treatment",
+    "TEXT",
+    255
+   ],
+   [
+    "Creek Bed Treatment",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipe Description",
+    "TEXT",
+    255
+   ],
+   [
+    "Type 6 (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Type 7 (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Type 4 & 7 (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Type 4 & 6 (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Operator",
+    "TEXT",
+    255
+   ],
+   [
+    "Location",
+    "TEXT",
+    255
+   ],
+   [
+    "Material",
+    "TEXT",
+    255
+   ],
+   [
+    "Size (mm)",
+    "TEXT",
+    255
+   ],
+   [
+    "ID",
+    "TEXT",
+    255
+   ],
+   [
+    "Actual Chainage (surveyed)",
+    "TEXT",
+    255
+   ],
+   [
+    "Located",
+    "TEXT",
+    255
+   ],
+   [
+    "C&G Code",
+    "TEXT",
+    255
+   ],
+   [
+    "Trench Code",
+    "TEXT",
+    255
+   ],
+   [
+    "Surveyors PtNo",
+    "TEXT",
+    255
+   ],
+   [
+    "E",
+    "TEXT",
+    255
+   ],
+   [
+    "N",
+    "TEXT",
+    255
+   ],
+   [
+    "Z",
+    "TEXT",
+    255
+   ],
+   [
+    "Survey Code",
+    "TEXT",
+    255
+   ],
+   [
+    "Proven to Underside of Service",
+    "TEXT",
+    255
+   ],
+   [
+    "Test Point",
+    "TEXT",
+    255
+   ],
+   [
+    "Proposed Crossing Method",
+    "TEXT",
+    255
+   ],
+   [
+    "Parallel or Crossed",
+    "TEXT",
+    255
+   ],
+   [
+    "Design Drawing",
+    "TEXT",
+    255
+   ],
+   [
+    "DBYD SEQ",
+    "TEXT",
+    255
+   ],
+   [
+    "Separation (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Asset DOC (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipeline DOC (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Depth to Underside of Asset (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Crossover",
+    "TEXT",
+    255
+   ],
+   [
+    "Within",
+    "TEXT",
+    255
+   ],
+   [
+    "Excavation Permit Required?",
+    "TEXT",
+    255
+   ],
+   [
+    "Excavation Permit Date",
+    "TEXT",
+    255
+   ],
+   [
+    "Crossing Permit Required?",
+    "TEXT",
+    255
+   ],
+   [
+    "Crossing Permit Date",
+    "TEXT",
+    255
+   ],
+   [
+    "Comments",
+    "TEXT",
+    255
+   ],
+   [
+    "Source File",
+    "TEXT",
+    255
+   ],
+   [
+    "Source Row",
+    "TEXT",
+    255
+   ],
+   [
+    "Area (m2)",
+    "TEXT",
+    255
+   ],
+   [
+    "Timber Density",
+    "TEXT",
+    255
+   ],
+   [
+    "Thrust Block Category",
+    "TEXT",
+    255
+   ],
+   [
+    "Installed",
+    "TEXT",
+    255
+   ],
+   [
+    "Install Date",
+    "TEXT",
+    255
+   ],
+   [
+    "Installed By",
+    "TEXT",
+    255
+   ],
+   [
+    "Test Document No",
+    "TEXT",
+    255
+   ],
+   [
+    "Test Status",
+    "TEXT",
+    255
+   ],
+   [
+    "Test Date",
+    "TEXT",
+    255
+   ],
+   [
+    "Complete",
+    "TEXT",
+    255
+   ],
+   [
+    "Completion Date",
+    "DATETIME",
+    0
+   ],
+   [
+    "Progress Notes",
+    "TEXT",
+    255
+   ],
+   [
+    "Unit Rate ($)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Quantity",
+    "LONG",
+    0
+   ],
+   [
+    "Unit",
+    "TEXT",
+    255
+   ],
+   [
+    "Total Cost ($)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Fitting Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Type of Bend",
+    "TEXT",
+    255
+   ],
+   [
+    "Fitting Material",
+    "TEXT",
+    255
+   ],
+   [
+    "Fitting DN (mm)",
+    "LONG",
+    0
+   ],
+   [
+    "Max Test Pressure (kPa)",
+    "LONG",
+    0
+   ],
+   [
+    "Allowable Lateral Bearing (kPa)",
+    "LONG",
+    0
+   ],
+   [
+    "Thrust Block Item",
+    "TEXT",
+    255
+   ],
+   [
+    "Design Source",
+    "TEXT",
+    255
+   ],
+   [
+    "Valve Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Crossing Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Crew",
+    "TEXT",
+    255
+   ],
+   [
+    "Bend Rate Class",
+    "TEXT",
+    255
+   ],
+   [
+    "Completion Driver",
+    "TEXT",
+    255
+   ],
+   [
+    "Front Chainage (m)",
+    "LONG",
+    0
+   ],
+   [
+    "Auto Complete",
+    "TEXT",
+    255
+   ],
+   [
+    "Auto Complete As At",
+    "TEXT",
+    255
+   ],
+   [
+    "Col93",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Valve Arrangement Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Valve Assembly Group",
+    "TEXT",
+    255
+   ],
+   [
+    "Valve Arrangement",
+    "TEXT",
+    255
+   ],
+   [
+    "Branch / Tee Size",
+    "TEXT",
+    255
+   ],
+   [
+    "Air Valve",
+    "TEXT",
+    255
+   ],
+   [
+    "Scour Valve",
+    "TEXT",
+    255
+   ],
+   [
+    "Side",
+    "TEXT",
+    255
+   ],
+   [
+    "Invert Level (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Depth of Invert (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Natural Surface (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Orifice Plate Bore (mm)",
+    "TEXT",
+    255
+   ],
+   [
+    "Within 1% AEP Flood Zone",
+    "TEXT",
+    255
+   ],
+   [
+    "Claim Item No (PC02)",
+    "TEXT",
+    255
+   ],
+   [
+    "Location Drawing Ref",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": "Record Key",
+  "indexes": [
+   "Chainage Start (m)",
+   "Pipeline Section",
+   "Register",
+   "Asset Type",
+   "Asset ID",
+   "Trench Type",
+   "Complete"
+  ],
+  "rows": 2222,
+  "note": "Master Register - one row per asset, Record Key is the primary key"
+ },
+ {
+  "table": "tblRateTrench",
+  "fields": [
+   [
+    "Pipeline Section",
+    "TEXT",
+    255
+   ],
+   [
+    "Trench Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Description",
+    "TEXT",
+    255
+   ],
+   [
+    "Unit",
+    "TEXT",
+    255
+   ],
+   [
+    "Rate",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Effective From",
+    "TEXT",
+    255
+   ],
+   [
+    "Rate Source / Basis",
+    "TEXT",
+    255
+   ],
+   [
+    "Sections in register",
+    "LONG",
+    0
+   ],
+   [
+    "Lookup Key",
+    "TEXT",
+    255
+   ],
+   [
+    "Cost Rate",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Margin ($)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Margin %",
+    "DOUBLE",
+    0
+   ]
+  ],
+  "pk": null,
+  "indexes": [
+   "Pipeline Section",
+   "Trench Type"
+  ],
+  "rows": 22,
+  "note": ""
+ },
+ {
+  "table": "tblRatePipe",
+  "fields": [
+   [
+    "Pipeline Section",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipe Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipe Description",
+    "TEXT",
+    255
+   ],
+   [
+    "Nominal Size",
+    "TEXT",
+    255
+   ],
+   [
+    "Unit",
+    "TEXT",
+    255
+   ],
+   [
+    "Rate",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Effective From",
+    "TEXT",
+    255
+   ],
+   [
+    "Rate Source / Basis",
+    "TEXT",
+    255
+   ],
+   [
+    "Lookup Key",
+    "TEXT",
+    255
+   ],
+   [
+    "Cost Rate",
+    "TEXT",
+    255
+   ],
+   [
+    "Margin ($)",
+    "TEXT",
+    255
+   ],
+   [
+    "Margin %",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [
+   "Pipeline Section",
+   "Pipe Type"
+  ],
+  "rows": 4,
+  "note": ""
+ },
+ {
+  "table": "tblRatePoint",
+  "fields": [
+   [
+    "Asset Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Unit",
+    "TEXT",
+    255
+   ],
+   [
+    "Rate",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Effective From",
+    "TEXT",
+    255
+   ],
+   [
+    "Rate Source / Basis",
+    "TEXT",
+    255
+   ],
+   [
+    "Status",
+    "TEXT",
+    255
+   ],
+   [
+    "Cost Rate",
+    "TEXT",
+    255
+   ],
+   [
+    "Margin ($)",
+    "TEXT",
+    255
+   ],
+   [
+    "Margin %",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [
+   "Asset Type"
+  ],
+  "rows": 9,
+  "note": ""
+ },
+ {
+  "table": "tblRateThrustBlock",
+  "fields": [
+   [
+    "Pipeline Section",
+    "TEXT",
+    255
+   ],
+   [
+    "Thrust Block Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Item",
+    "TEXT",
+    255
+   ],
+   [
+    "Fitting",
+    "TEXT",
+    255
+   ],
+   [
+    "Angle / Size",
+    "TEXT",
+    255
+   ],
+   [
+    "Material",
+    "TEXT",
+    255
+   ],
+   [
+    "DN (mm)",
+    "LONG",
+    0
+   ],
+   [
+    "Blocks",
+    "LONG",
+    0
+   ],
+   [
+    "Unit",
+    "TEXT",
+    255
+   ],
+   [
+    "Rate",
+    "LONG",
+    0
+   ],
+   [
+    "Cuts",
+    "LONG",
+    0
+   ],
+   [
+    "Effective From",
+    "DATETIME",
+    0
+   ],
+   [
+    "Rate Source / Basis",
+    "TEXT",
+    255
+   ],
+   [
+    "Lookup Key",
+    "TEXT",
+    255
+   ],
+   [
+    "Cost Rate",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Margin ($)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Margin %",
+    "DOUBLE",
+    0
+   ]
+  ],
+  "pk": null,
+  "indexes": [
+   "Pipeline Section",
+   "Thrust Block Type"
+  ],
+  "rows": 64,
+  "note": ""
+ },
+ {
+  "table": "tblRateBend",
+  "fields": [
+   [
+    "Pipeline Section",
+    "TEXT",
+    255
+   ],
+   [
+    "Bend Rate Class",
+    "TEXT",
+    255
+   ],
+   [
+    "Description",
+    "TEXT",
+    255
+   ],
+   [
+    "Material",
+    "TEXT",
+    255
+   ],
+   [
+    "DN (mm)",
+    "LONG",
+    0
+   ],
+   [
+    "Bends",
+    "LONG",
+    0
+   ],
+   [
+    "Unit",
+    "TEXT",
+    255
+   ],
+   [
+    "Rate",
+    "TEXT",
+    255
+   ],
+   [
+    "Effective From",
+    "TEXT",
+    255
+   ],
+   [
+    "Rate Source / Basis",
+    "TEXT",
+    255
+   ],
+   [
+    "Lookup Key",
+    "TEXT",
+    255
+   ],
+   [
+    "Cost Rate",
+    "TEXT",
+    255
+   ],
+   [
+    "Margin ($)",
+    "TEXT",
+    255
+   ],
+   [
+    "Margin %",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [
+   "Pipeline Section",
+   "Bend Rate Class"
+  ],
+  "rows": 10,
+  "note": ""
+ },
+ {
+  "table": "tblRateValve",
+  "fields": [
+   [
+    "Pipeline Section",
+    "TEXT",
+    255
+   ],
+   [
+    "Valve Class",
+    "TEXT",
+    255
+   ],
+   [
+    "Valve Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Description",
+    "TEXT",
+    255
+   ],
+   [
+    "DN (mm)",
+    "LONG",
+    0
+   ],
+   [
+    "Valves",
+    "LONG",
+    0
+   ],
+   [
+    "Unit",
+    "TEXT",
+    255
+   ],
+   [
+    "Rate",
+    "LONG",
+    0
+   ],
+   [
+    "Effective From",
+    "TEXT",
+    255
+   ],
+   [
+    "Rate Source / Basis",
+    "TEXT",
+    255
+   ],
+   [
+    "Lookup Key",
+    "TEXT",
+    255
+   ],
+   [
+    "Cost Rate",
+    "TEXT",
+    255
+   ],
+   [
+    "Margin ($)",
+    "TEXT",
+    255
+   ],
+   [
+    "Margin %",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [
+   "Pipeline Section",
+   "Valve Class"
+  ],
+  "rows": 20,
+  "note": ""
+ },
+ {
+  "table": "tblRatePlantLabour",
+  "fields": [
+   [
+    "Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Description",
+    "TEXT",
+    255
+   ],
+   [
+    "Unit",
+    "TEXT",
+    255
+   ],
+   [
+    "Charge Rate ($/h)",
+    "LONG",
+    0
+   ],
+   [
+    "Cost Rate ($/h)",
+    "LONG",
+    0
+   ],
+   [
+    "Margin ($/h)",
+    "LONG",
+    0
+   ],
+   [
+    "Notes",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [
+   "Description"
+  ],
+  "rows": 15,
+  "note": ""
+ },
+ {
+  "table": "tblProgressControl",
+  "fields": [
+   [
+    "Pipeline Section",
+    "TEXT",
+    255
+   ],
+   [
+    "Section extent (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "PIPE",
+    "LONG",
+    0
+   ],
+   [
+    "TRENCH",
+    "LONG",
+    0
+   ],
+   [
+    "As At Date",
+    "DATETIME",
+    0
+   ],
+   [
+    "Updated By",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": "Pipeline Section",
+  "indexes": [],
+  "rows": 2,
+  "note": "The two fronts. PIPE is typed; TRENCH is derived from trench progress."
+ },
+ {
+  "table": "tblTrenchProgress",
+  "fields": [
+   [
+    "Record Key",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipe Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Trench Complete (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipe Laid (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "As At Date",
+    "TEXT",
+    255
+   ],
+   [
+    "Updated By",
+    "TEXT",
+    255
+   ],
+   [
+    "Notes",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": "Record Key",
+  "indexes": [],
+  "rows": 207,
+  "note": "The only typed columns of Cost Tracker - Linear. Everything else is calculated."
+ },
+ {
+  "table": "tblDailyProgress",
+  "fields": [
+   [
+    "Date",
+    "TEXT",
+    255
+   ],
+   [
+    "Recorded By",
+    "TEXT",
+    255
+   ],
+   [
+    "Shift",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipeline Section",
+    "TEXT",
+    255
+   ],
+   [
+    "Trench From Ch (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Trench To Ch (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Trench m Today",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipe From Ch (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipe To Ch (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipe m Today",
+    "TEXT",
+    255
+   ],
+   [
+    "Point Assets Complete",
+    "TEXT",
+    255
+   ],
+   [
+    "Earned Today ($)",
+    "TEXT",
+    255
+   ],
+   [
+    "Our Cost Today ($)",
+    "TEXT",
+    255
+   ],
+   [
+    "Gross Margin Today ($)",
+    "TEXT",
+    255
+   ],
+   [
+    "Weather",
+    "TEXT",
+    255
+   ],
+   [
+    "Downtime (hrs)",
+    "TEXT",
+    255
+   ],
+   [
+    "Notes",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [
+   "Date"
+  ],
+  "rows": 0,
+  "note": "Append only - one row per day"
+ },
+ {
+  "table": "tblDailyPlantLabour",
+  "fields": [
+   [
+    "Date",
+    "TEXT",
+    255
+   ],
+   [
+    "Recorded By",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipeline Section",
+    "TEXT",
+    255
+   ],
+   [
+    "Crew",
+    "TEXT",
+    255
+   ],
+   [
+    "Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Description",
+    "TEXT",
+    255
+   ],
+   [
+    "Number",
+    "TEXT",
+    255
+   ],
+   [
+    "Hours",
+    "TEXT",
+    255
+   ],
+   [
+    "Standby Hours",
+    "TEXT",
+    255
+   ],
+   [
+    "Notes",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [
+   "Date"
+  ],
+  "rows": 0,
+  "note": "Append only - one row per day and crew resource"
+ },
+ {
+  "table": "tblDailySafety",
+  "fields": [
+   [
+    "Date",
+    "TEXT",
+    255
+   ],
+   [
+    "Recorded By",
+    "TEXT",
+    255
+   ],
+   [
+    "Toolbox Held",
+    "TEXT",
+    255
+   ],
+   [
+    "Toolbox Topic",
+    "TEXT",
+    255
+   ],
+   [
+    "Personnel On Site",
+    "TEXT",
+    255
+   ],
+   [
+    "Incident Class",
+    "TEXT",
+    255
+   ],
+   [
+    "Incident Detail",
+    "TEXT",
+    255
+   ],
+   [
+    "Lost Time (hrs)",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [
+   "Date"
+  ],
+  "rows": 0,
+  "note": "Append only - one row per day"
+ },
+ {
+  "table": "tblDailyHoldPoint",
+  "fields": [
+   [
+    "Date",
+    "TEXT",
+    255
+   ],
+   [
+    "Recorded By",
+    "TEXT",
+    255
+   ],
+   [
+    "Reference",
+    "TEXT",
+    255
+   ],
+   [
+    "Description",
+    "TEXT",
+    255
+   ],
+   [
+    "Status",
+    "TEXT",
+    255
+   ],
+   [
+    "Record Key",
+    "TEXT",
+    255
+   ],
+   [
+    "Notes",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [
+   "Date"
+  ],
+  "rows": 0,
+  "note": "Append only - one row per day"
+ },
+ {
+  "table": "tblDailyProfit",
+  "fields": [
+   [
+    "Date",
+    "TEXT",
+    255
+   ],
+   [
+    "Recorded By",
+    "TEXT",
+    255
+   ],
+   [
+    "Shift",
+    "TEXT",
+    255
+   ],
+   [
+    "Earned ($)",
+    "TEXT",
+    255
+   ],
+   [
+    "Direct Cost ($)",
+    "TEXT",
+    255
+   ],
+   [
+    "Plant and Labour ($)",
+    "TEXT",
+    255
+   ],
+   [
+    "Total Cost ($)",
+    "TEXT",
+    255
+   ],
+   [
+    "Profit ($)",
+    "TEXT",
+    255
+   ],
+   [
+    "Margin %",
+    "TEXT",
+    255
+   ],
+   [
+    "Trench m",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipe m",
+    "TEXT",
+    255
+   ],
+   [
+    "Crew Hours",
+    "TEXT",
+    255
+   ],
+   [
+    "Notes",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [
+   "Date"
+  ],
+  "rows": 0,
+  "note": "Append only - one row per day"
+ },
+ {
+  "table": "tblEditLog",
+  "fields": [
+   [
+    "Timestamp",
+    "TEXT",
+    255
+   ],
+   [
+    "Edited by",
+    "TEXT",
+    255
+   ],
+   [
+    "Record Key",
+    "TEXT",
+    255
+   ],
+   [
+    "Asset ID",
+    "TEXT",
+    255
+   ],
+   [
+    "Field",
+    "TEXT",
+    255
+   ],
+   [
+    "Previous value",
+    "TEXT",
+    255
+   ],
+   [
+    "New value",
+    "TEXT",
+    255
+   ],
+   [
+    "Sheet cell",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [
+   "Record Key",
+   "Timestamp"
+  ],
+  "rows": 2581,
+  "note": ""
+ },
+ {
+  "table": "tblDataQuality",
+  "fields": [
+   [
+    "Register",
+    "TEXT",
+    255
+   ],
+   [
+    "Source row(s)",
+    "TEXT",
+    255
+   ],
+   [
+    "Issue",
+    "TEXT",
+    255
+   ],
+   [
+    "Resolution",
+    "TEXT",
+    255
+   ],
+   [
+    "Detail",
+    "MEMO",
+    0
+   ]
+  ],
+  "pk": null,
+  "indexes": [
+   "Register"
+  ],
+  "rows": 100,
+  "note": ""
+ },
+ {
+  "table": "tblRevision",
+  "fields": [
+   [
+    "Revision",
+    "TEXT",
+    255
+   ],
+   [
+    "Date",
+    "TEXT",
+    255
+   ],
+   [
+    "Description of change",
+    "MEMO",
+    0
+   ],
+   [
+    "Records affected",
+    "TEXT",
+    255
+   ],
+   [
+    "Issued by",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [],
+  "rows": 15,
+  "note": ""
+ },
+ {
+  "table": "tblValveScheduleReview",
+  "fields": [
+   [
+    "Record Key",
+    "TEXT",
+    255
+   ],
+   [
+    "MR Row",
+    "TEXT",
+    255
+   ],
+   [
+    "Chainage (register)",
+    "TEXT",
+    255
+   ],
+   [
+    "Chainage (IFC drawing)",
+    "TEXT",
+    255
+   ],
+   [
+    "Delta (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Valve Type (register)",
+    "TEXT",
+    255
+   ],
+   [
+    "Valve Type (IFC)",
+    "TEXT",
+    255
+   ],
+   [
+    "Drawing (register)",
+    "TEXT",
+    255
+   ],
+   [
+    "Drawing (IFC, proposed)",
+    "TEXT",
+    255
+   ],
+   [
+    "Discrepancy",
+    "TEXT",
+    255
+   ],
+   [
+    "Recommended Action",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [],
+  "rows": 0,
+  "note": ""
+ },
+ {
+  "table": "tblSetting",
+  "fields": [
+   [
+    "Setting",
+    "TEXT",
+    255
+   ],
+   [
+    "Value",
+    "TEXT",
+    255
+   ],
+   [
+    "What it does",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": "Setting",
+  "indexes": [],
+  "rows": 9,
+  "note": ""
+ },
+ {
+  "table": "tblStandingResource",
+  "fields": [
+   [
+    "Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Description",
+    "TEXT",
+    255
+   ],
+   [
+    "Number",
+    "LONG",
+    0
+   ],
+   [
+    "Default Hours",
+    "LONG",
+    0
+   ],
+   [
+    "Notes",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [],
+  "rows": 4,
+  "note": ""
+ },
+ {
+  "table": "tblDocControl",
+  "fields": [
+   [
+    "Item",
+    "TEXT",
+    255
+   ],
+   [
+    "Value",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": "Item",
+  "indexes": [],
+  "rows": 9,
+  "note": ""
+ },
+ {
+  "table": "tblSrcThrustBlock",
+  "fields": [
+   [
+    "Col2",
+    "TEXT",
+    255
+   ],
+   [
+    "Located",
+    "TEXT",
+    255
+   ],
+   [
+    "C&G",
+    "TEXT",
+    255
+   ],
+   [
+    "TRENCH",
+    "TEXT",
+    255
+   ],
+   [
+    "Surveyors PtNo",
+    "TEXT",
+    255
+   ],
+   [
+    "E",
+    "TEXT",
+    255
+   ],
+   [
+    "N",
+    "TEXT",
+    255
+   ],
+   [
+    "Z",
+    "TEXT",
+    255
+   ],
+   [
+    "Survey Code",
+    "TEXT",
+    255
+   ],
+   [
+    "Actual Chainage",
+    "TEXT",
+    255
+   ],
+   [
+    "Asset Id",
+    "TEXT",
+    255
+   ],
+   [
+    "KP",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Pipeline Section",
+    "TEXT",
+    255
+   ],
+   [
+    "Utility Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Utility Description",
+    "TEXT",
+    255
+   ],
+   [
+    "Operator",
+    "TEXT",
+    255
+   ],
+   [
+    "Location",
+    "TEXT",
+    255
+   ],
+   [
+    "Material",
+    "TEXT",
+    255
+   ],
+   [
+    "Size (mm)",
+    "LONG",
+    0
+   ],
+   [
+    "ID",
+    "TEXT",
+    255
+   ],
+   [
+    "Proven to Underside of Service",
+    "TEXT",
+    255
+   ],
+   [
+    "Test Point",
+    "TEXT",
+    255
+   ],
+   [
+    "C&G Code",
+    "TEXT",
+    255
+   ],
+   [
+    "Trench Code",
+    "TEXT",
+    255
+   ],
+   [
+    "Proposed Crossing Method",
+    "TEXT",
+    255
+   ],
+   [
+    "Parallel or Crossed",
+    "TEXT",
+    255
+   ],
+   [
+    "Design Drawing",
+    "TEXT",
+    255
+   ],
+   [
+    "DBYD SEQ",
+    "TEXT",
+    255
+   ],
+   [
+    "Separation (m) (Minimum 600mm clearance to underside of asse",
+    "TEXT",
+    255
+   ],
+   [
+    "Asset DOC (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipeline DOC (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Depth to Underside of Asset (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Crossover",
+    "TEXT",
+    255
+   ],
+   [
+    "Within",
+    "TEXT",
+    255
+   ],
+   [
+    "Permit to Excavate Near Assets Required?",
+    "TEXT",
+    255
+   ],
+   [
+    "Permit/Notification Date",
+    "TEXT",
+    255
+   ],
+   [
+    "Crossing Permit Required?",
+    "TEXT",
+    255
+   ],
+   [
+    "Permit/Notification Date 2",
+    "TEXT",
+    255
+   ],
+   [
+    "Comments",
+    "TEXT",
+    255
+   ],
+   [
+    "Thrust Block Category",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [],
+  "rows": 255,
+  "note": "Frozen source rows - never edited"
+ },
+ {
+  "table": "tblSrcTrenchType",
+  "fields": [
+   [
+    "Located",
+    "TEXT",
+    255
+   ],
+   [
+    "C&G",
+    "TEXT",
+    255
+   ],
+   [
+    "TRENCH",
+    "TEXT",
+    255
+   ],
+   [
+    "Surveyors PtNo",
+    "TEXT",
+    255
+   ],
+   [
+    "E",
+    "TEXT",
+    255
+   ],
+   [
+    "N",
+    "TEXT",
+    255
+   ],
+   [
+    "Z",
+    "TEXT",
+    255
+   ],
+   [
+    "Survey Code",
+    "TEXT",
+    255
+   ],
+   [
+    "Actual Chainage",
+    "TEXT",
+    255
+   ],
+   [
+    "Drawing (START)",
+    "TEXT",
+    255
+   ],
+   [
+    "Drawing (END)",
+    "TEXT",
+    255
+   ],
+   [
+    "KP (START)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "KP (END)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Trench Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Total Length Sections (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Pipeline Section",
+    "TEXT",
+    255
+   ],
+   [
+    "Utility Description",
+    "TEXT",
+    255
+   ],
+   [
+    "Operator",
+    "TEXT",
+    255
+   ],
+   [
+    "Location",
+    "TEXT",
+    255
+   ],
+   [
+    "Material",
+    "TEXT",
+    255
+   ],
+   [
+    "Size (mm)",
+    "TEXT",
+    255
+   ],
+   [
+    "ID",
+    "TEXT",
+    255
+   ],
+   [
+    "Proven to Underside of Service",
+    "TEXT",
+    255
+   ],
+   [
+    "Test Point",
+    "TEXT",
+    255
+   ],
+   [
+    "C&G Code",
+    "TEXT",
+    255
+   ],
+   [
+    "Trench Code",
+    "TEXT",
+    255
+   ],
+   [
+    "Proposed Crossing Method",
+    "TEXT",
+    255
+   ],
+   [
+    "Parallel or Crossed",
+    "TEXT",
+    255
+   ],
+   [
+    "Design Drawing",
+    "TEXT",
+    255
+   ],
+   [
+    "DBYD SEQ",
+    "TEXT",
+    255
+   ],
+   [
+    "Separation (m) (Minimum 600mm clearance to underside of asse",
+    "TEXT",
+    255
+   ],
+   [
+    "Asset DOC (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipeline DOC (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Depth to Underside of Asset (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Crossover",
+    "TEXT",
+    255
+   ],
+   [
+    "Within",
+    "TEXT",
+    255
+   ],
+   [
+    "Permit to Excavate Near Assets Required?",
+    "TEXT",
+    255
+   ],
+   [
+    "Permit/Notification Date",
+    "TEXT",
+    255
+   ],
+   [
+    "Crossing Permit Required?",
+    "TEXT",
+    255
+   ],
+   [
+    "Permit/Notification Date (2)",
+    "TEXT",
+    255
+   ],
+   [
+    "Comments",
+    "TEXT",
+    255
+   ],
+   [
+    "Trench Type (2)",
+    "TEXT",
+    255
+   ],
+   [
+    "PWG",
+    "DOUBLE",
+    0
+   ],
+   [
+    "PHW",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Total (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "No of Sections",
+    "LONG",
+    0
+   ],
+   [
+    "Source Row",
+    "LONG",
+    0
+   ]
+  ],
+  "pk": null,
+  "indexes": [],
+  "rows": 207,
+  "note": "Frozen source rows - never edited"
+ },
+ {
+  "table": "tblSrcTrenchStopBH",
+  "fields": [
+   [
+    "Col2",
+    "TEXT",
+    255
+   ],
+   [
+    "Located",
+    "TEXT",
+    255
+   ],
+   [
+    "C&G",
+    "TEXT",
+    255
+   ],
+   [
+    "TRENCH",
+    "TEXT",
+    255
+   ],
+   [
+    "Surveyors PtNo",
+    "TEXT",
+    255
+   ],
+   [
+    "E",
+    "TEXT",
+    255
+   ],
+   [
+    "N",
+    "TEXT",
+    255
+   ],
+   [
+    "Z",
+    "TEXT",
+    255
+   ],
+   [
+    "Survey Code",
+    "TEXT",
+    255
+   ],
+   [
+    "Actual Chainage",
+    "TEXT",
+    255
+   ],
+   [
+    "Col13",
+    "TEXT",
+    255
+   ],
+   [
+    "Asset Id",
+    "TEXT",
+    255
+   ],
+   [
+    "Drawing",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipeline Section",
+    "TEXT",
+    255
+   ],
+   [
+    "KP",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Utility Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Notes , Not on Plan",
+    "TEXT",
+    255
+   ],
+   [
+    "Operator",
+    "TEXT",
+    255
+   ],
+   [
+    "Location",
+    "TEXT",
+    255
+   ],
+   [
+    "Material",
+    "TEXT",
+    255
+   ],
+   [
+    "Size (mm)",
+    "TEXT",
+    255
+   ],
+   [
+    "ID",
+    "TEXT",
+    255
+   ],
+   [
+    "Proven to Underside of Service",
+    "TEXT",
+    255
+   ],
+   [
+    "Test Point",
+    "TEXT",
+    255
+   ],
+   [
+    "C&G Code",
+    "TEXT",
+    255
+   ],
+   [
+    "Trench Code",
+    "TEXT",
+    255
+   ],
+   [
+    "Proposed Crossing Method",
+    "TEXT",
+    255
+   ],
+   [
+    "Parallel or Crossed",
+    "TEXT",
+    255
+   ],
+   [
+    "Design Drawing",
+    "TEXT",
+    255
+   ],
+   [
+    "DBYD SEQ",
+    "TEXT",
+    255
+   ],
+   [
+    "Separation (m) (Minimum 600mm clearance to underside of asse",
+    "TEXT",
+    255
+   ],
+   [
+    "Asset DOC (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipeline DOC (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Depth to Underside of Asset (m)",
+    "TEXT",
+    255
+   ],
+   [
+    "Crossover",
+    "TEXT",
+    255
+   ],
+   [
+    "Within",
+    "TEXT",
+    255
+   ],
+   [
+    "Permit to Excavate Near Assets Required?",
+    "TEXT",
+    255
+   ],
+   [
+    "Permit/Notification Date",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [],
+  "rows": 489,
+  "note": "Frozen source rows - never edited"
+ },
+ {
+  "table": "tblSrcForeignService",
+  "fields": [
+   [
+    "Asset Id",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipeline Section",
+    "TEXT",
+    255
+   ],
+   [
+    "KP",
+    "LONG",
+    0
+   ],
+   [
+    "Utility Description",
+    "TEXT",
+    255
+   ],
+   [
+    "Utility Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Operator",
+    "TEXT",
+    255
+   ],
+   [
+    "Size (mm)",
+    "TEXT",
+    255
+   ],
+   [
+    "Info Source",
+    "TEXT",
+    255
+   ],
+   [
+    "Drawing",
+    "TEXT",
+    255
+   ],
+   [
+    "Drawing (superseded)",
+    "TEXT",
+    255
+   ],
+   [
+    "Included in Current Plan",
+    "TEXT",
+    255
+   ],
+   [
+    "Comments",
+    "TEXT",
+    255
+   ],
+   [
+    "Source Row",
+    "LONG",
+    0
+   ]
+  ],
+  "pk": null,
+  "indexes": [],
+  "rows": 334,
+  "note": "Frozen source rows - never edited"
+ },
+ {
+  "table": "tblSrcCreekCrossing",
+  "fields": [
+   [
+    "Asset Id",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipeline Section",
+    "TEXT",
+    255
+   ],
+   [
+    "KP (START)",
+    "LONG",
+    0
+   ],
+   [
+    "KP (END)",
+    "LONG",
+    0
+   ],
+   [
+    "Feature Name",
+    "TEXT",
+    255
+   ],
+   [
+    "Embankment Treatment",
+    "TEXT",
+    255
+   ],
+   [
+    "Creek Bed Treatment",
+    "TEXT",
+    255
+   ],
+   [
+    "Source Row",
+    "LONG",
+    0
+   ]
+  ],
+  "pk": null,
+  "indexes": [],
+  "rows": 32,
+  "note": "Frozen source rows - never edited"
+ },
+ {
+  "table": "tblSrcRoadRailXing",
+  "fields": [
+   [
+    "Asset Id",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipeline Section",
+    "TEXT",
+    255
+   ],
+   [
+    "KP (START)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "KP (END)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Utility Type",
+    "TEXT",
+    255
+   ],
+   [
+    "Surface",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipeline DN",
+    "LONG",
+    0
+   ],
+   [
+    "Total Length Sections (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Feature Name",
+    "TEXT",
+    255
+   ],
+   [
+    "Operator",
+    "TEXT",
+    255
+   ],
+   [
+    "Proposed Crossing Method",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipe Description",
+    "TEXT",
+    255
+   ],
+   [
+    "Type 6 (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Type 7 (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Type 4 & 7 (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Type 4 & 6 (m)",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Source Row",
+    "LONG",
+    0
+   ]
+  ],
+  "pk": null,
+  "indexes": [],
+  "rows": 42,
+  "note": "Frozen source rows - never edited"
+ },
+ {
+  "table": "tblSrcTreeRemoval",
+  "fields": [
+   [
+    "Pipe ID",
+    "TEXT",
+    255
+   ],
+   [
+    "Pipeline",
+    "TEXT",
+    255
+   ],
+   [
+    "Start Chainage",
+    "DOUBLE",
+    0
+   ],
+   [
+    "End Chainage",
+    "DOUBLE",
+    0
+   ],
+   [
+    "SC(m)",
+    "LONG",
+    0
+   ],
+   [
+    "EC (m)",
+    "LONG",
+    0
+   ],
+   [
+    "Area m2",
+    "DOUBLE",
+    0
+   ],
+   [
+    "Timber Density HEAVY/LIGHT/TRIM",
+    "TEXT",
+    255
+   ],
+   [
+    "Other Information",
+    "TEXT",
+    255
+   ],
+   [
+    "Loaded to Master Register?",
+    "TEXT",
+    255
+   ]
+  ],
+  "pk": null,
+  "indexes": [],
+  "rows": 222,
+  "note": "Frozen source rows - never edited"
+ }
+]

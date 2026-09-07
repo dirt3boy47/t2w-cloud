@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Drawings — T2W Pipeline Asset Register</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <div class="card">
+    <h2>Drawing register</h2>
+    <div class="rpctl" style="display:flex;gap:10px;align-items:end;margin-bottom:12px">
+      <div class="field" style="margin:0;min-width:220px"><label>Filter</label>
+        <input id="fDwg" placeholder="drawing number or section"></div>
+      <div class="count" id="count"></div>
+    </div>
+    <div class="table-wrap"><table class="data" id="tbl">
+      <thead><tr><th>Drawing</th><th>Section</th><th>From (m)</th><th>To (m)</th>
+        <th>Records</th><th>Complete</th><th>%</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</main>
+<script src="/t2w.js"></script>
+<script>
+let rows = [];
+function render() {
+  const f = document.getElementById('fDwg').value.toLowerCase();
+  const list = rows.filter((r) =>
+    !f || (r.drawing || '').toLowerCase().includes(f) || (r.section || '').toLowerCase().includes(f));
+  document.querySelector('#tbl tbody').innerHTML = list.map((r) => {
+    const pct = r.records ? Math.round((r.complete / r.records) * 100) : 0;
+    return `<tr>
+      <td>${T2W.esc(r.drawing)}</td><td>${T2W.esc(r.section)}</td>
+      <td>${T2W.num(r.fromCh)}</td><td>${T2W.num(r.toCh)}</td>
+      <td>${T2W.num(r.records)}</td><td>${T2W.num(r.complete)}</td>
+      <td><div class="bar" style="width:70px"><div style="width:${pct}%"></div></div> ${pct}%</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('count').textContent = `${list.length} drawing(s)`;
+}
+(async () => {
+  await T2W.mount();
+  rows = await T2W.api('/drawings');
+  document.getElementById('fDwg').addEventListener('input', render);
+  render();
+})();
+</script>
+</body>
+</html>

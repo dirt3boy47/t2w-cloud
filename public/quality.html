@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Data quality — T2W Pipeline Asset Register</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .chk { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 10px; background: #fff; }
+  .chk h3 { margin: 0; padding: 12px 14px; font-size: 14px; cursor: pointer; display: flex;
+            justify-content: space-between; align-items: center; }
+  .chk .why { padding: 0 14px 10px; font-size: 12px; color: var(--muted); }
+  .chk .rows { display: none; padding: 0 14px 14px; }
+  .chk.open .rows { display: block; }
+  .badge { font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+  .badge.zero { background: #e6f4ea; color: var(--ok); }
+  .badge.some { background: #fdeceb; color: var(--warn); }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <h2>Data quality</h2>
+    <div class="count" style="margin-bottom:14px">Each check answers a question someone would otherwise
+      have to ask by eye. A count of zero is a genuine pass, not a check that failed to run.</div>
+    <div id="checks"></div>
+  </div>
+</main>
+<script src="/t2w.js"></script>
+<script>
+(async () => {
+  await T2W.mount();
+  const checks = await T2W.api('/data-quality');
+  document.getElementById('checks').innerHTML = checks.map((c, i) => {
+    const cols = c.rows.length ? Object.keys(c.rows[0]) : [];
+    return `<div class="chk" data-i="${i}">
+      <h3>${T2W.esc(c.label)}
+        <span class="badge ${c.count ? 'some' : 'zero'}">${c.count}</span></h3>
+      <div class="why">${T2W.esc(c.why)}</div>
+      <div class="rows">
+        ${c.rows.length ? `<div class="table-wrap" style="max-height:320px"><table class="data">
+          <thead><tr>${cols.map((k) => `<th>${T2W.esc(k)}</th>`).join('')}</tr></thead>
+          <tbody>${c.rows.slice(0, 500).map((r) =>
+            `<tr>${cols.map((k) => `<td>${T2W.esc(r[k] ?? '')}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table></div>${c.rows.length > 500 ? `<div class="count">showing first 500 of ${c.count}</div>` : ''}`
+        : '<div class="count">Nothing flagged.</div>'}
+      </div>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('.chk h3').forEach((h) => {
+    h.addEventListener('click', () => h.parentElement.classList.toggle('open'));
+  });
+})();
+</script>
+</body>
+</html>

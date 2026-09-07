@@ -1,0 +1,5 @@
+﻿"Pipeline Section","Pipe Type","Pipe Description","Nominal Size","Unit","Rate","Effective From","Rate Source / Basis","Lookup Key","Cost Rate","Margin ($)","Margin %"
+"PHW","DICL","DN600 PN35 DICL RRJ","DN600","$/m","485.45","","PHW-6105.01","PHW|DICL","","",""
+"PHW","MSCL","OD660x6WT MSCL Sintalock Type 2 PN35 carrier","OD660","$/m","1332.7","","PHW-6105.02","PHW|MSCL","","",""
+"PWG","DICL","DN375 PN35 DICL RRJ","DN375","$/m","","","TEST ENTRY — structure only, no rate supplied","PWG|DICL","","",""
+"PWG","MSCL","OD457x5WT Sintalock Type 1 MSCL carrier","OD457","$/m","","","TEST ENTRY — structure only, no rate supplied","PWG|MSCL","","",""

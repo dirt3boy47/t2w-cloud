@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>T2W Pipeline Asset Register</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <div class="card">
+    <h2>Chainage is the key. The pipe front is typed; everything else follows.</h2>
+    <div class="grid cols-3">
+      <a class="btn" style="text-decoration:none;text-align:center" href="/search.html">Find assets</a>
+      <a class="btn" style="text-decoration:none;text-align:center" href="/end-of-day.html">End of day</a>
+      <a class="btn" style="text-decoration:none;text-align:center" href="/dashboard.html">Cost dashboard</a>
+      <a class="btn secondary" style="text-decoration:none;text-align:center" href="/rates.html">Rate library</a>
+      <a class="btn secondary" style="text-decoration:none;text-align:center" href="/edit-log.html">Edit log</a>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Project position</h2>
+    <div class="grid cols-4" id="kpis"></div>
+  </div>
+</main>
+<script src="/t2w.js"></script>
+<script>
+(async () => {
+  await T2W.mount();
+  const t = await T2W.api('/dashboard/totals');
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="label">Trench budget</div><div class="value">${T2W.money(t.trench.budget)}</div></div>
+    <div class="kpi"><div class="label">Pipe budget</div><div class="value">${T2W.money(t.pipe.budget)}</div></div>
+    <div class="kpi"><div class="label">Point asset budget</div><div class="value">${T2W.money(t.point.budget)}</div></div>
+    <div class="kpi"><div class="label">Project total</div><div class="value">${T2W.money(t.total.budget)}</div></div>
+  `;
+})();
+</script>
+</body>
+</html>

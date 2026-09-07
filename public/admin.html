@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administration — T2W Pipeline Asset Register</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <div id="pageMsg"></div>
+
+  <div class="card">
+    <h2>Project administration</h2>
+    <div class="grid cols-4" id="statusCards"></div>
+  </div>
+
+  <div class="card">
+    <h2>Users</h2>
+    <div class="grid cols-4">
+      <div class="field"><label>Username</label><input id="newUsername" autocomplete="off"></div>
+      <div class="field"><label>Full name</label><input id="newFullName" autocomplete="off"></div>
+      <div class="field"><label>Email (optional)</label><input id="newEmail" type="email" autocomplete="off"></div>
+      <div class="field"><label>Role</label><select id="newRole"><option value="editor">Editor</option><option value="viewer">Viewer</option><option value="admin">Administrator</option></select></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="field"><label>Temporary password</label><input id="newPassword" type="password" autocomplete="new-password" placeholder="At least 8 characters"></div>
+      <div class="field" style="display:flex;align-items:flex-end"><button class="btn" id="addUser">Create user</button></div>
+    </div>
+    <div class="table-wrap" style="margin-top:12px;max-height:42vh">
+      <table class="data" id="usersTable"><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <div class="card danger-card">
+    <h2>Reset project progress</h2>
+    <p class="small-copy">This returns T2W to the database baseline. It clears daily progress, crew movement, plant and labour, safety, hold points and daily profit. The master asset register, rates, drawings, project setup and user accounts remain in place.</p>
+    <p class="small-copy"><strong>Type RESET below before the reset button is enabled.</strong></p>
+    <div class="grid cols-2">
+      <div class="field"><label>Confirmation</label><input id="resetConfirm" autocomplete="off" placeholder="RESET"></div>
+      <div class="field" style="display:flex;align-items:flex-end"><button class="btn warn" id="resetProject" disabled>Reset project progress</button></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Administration audit</h2>
+    <div class="table-wrap" style="max-height:42vh">
+      <table class="data" id="auditTable"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+</main>
+
+<script src="/t2w.js"></script>
+<script>
+let me;
+
+function message(text, ok = true) {
+  document.getElementById('pageMsg').innerHTML = `<div class="msg ${ok ? 'ok' : 'err'}">${T2W.esc(text)}</div>`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function loadStatus() {
+  const s = await T2W.api('/admin/status');
+  const cards = [
+    ['Assets', s.assets],
+    ['Completed assets', s.completedAssets],
+    ['Day reports', s.dailyProgressRows],
+    ['Plant & labour rows', s.plantLabourRows],
+  ];
+  document.getElementById('statusCards').innerHTML = cards.map(([label, value]) =>
+    `<div class="kpi"><div class="label">${T2W.esc(label)}</div><div class="value">${T2W.num(value)}</div></div>`
+  ).join('');
+}
+
+async function loadUsers() {
+  const rows = await T2W.api('/admin/users');
+  document.querySelector('#usersTable tbody').innerHTML = rows.map((u) => `
+    <tr data-user="${T2W.esc(u.username)}">
+      <td>${T2W.esc(u.username)}</td>
+      <td>${T2W.esc(u.fullName || '')}</td>
+      <td>${T2W.esc(u.email || '')}</td>
+      <td>
+        <select class="roleSelect" ${u.username === me.username ? 'disabled' : ''}>
+          <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Administrator</option>
+          <option value="editor" ${u.role === 'editor' ? 'selected' : ''}>Editor</option>
+          <option value="viewer" ${u.role === 'viewer' ? 'selected' : ''}>Viewer</option>
+        </select>
+      </td>
+      <td>
+        <div class="action-row">
+          <button class="btn secondary passwordBtn">Set password</button>
+          ${u.username === me.username ? '' : '<button class="btn warn deleteBtn">Delete</button>'}
+        </div>
+      </td>
+    </tr>`).join('');
+
+  document.querySelectorAll('.roleSelect').forEach((el) => el.addEventListener('change', async () => {
+    const username = el.closest('tr').dataset.user;
+    try {
+      await T2W.api(`/admin/users/${encodeURIComponent(username)}/role`, { method: 'PUT', body: { role: el.value } });
+      message(`Role updated for ${username}.`);
+      await loadAudit();
+    } catch (e) { message(e.message, false); await loadUsers(); }
+  }));
+
+  document.querySelectorAll('.passwordBtn').forEach((el) => el.addEventListener('click', async () => {
+    const username = el.closest('tr').dataset.user;
+    const password = window.prompt(`Enter the new password for ${username}. It must be at least 8 characters.`);
+    if (!password) return;
+    try {
+      await T2W.api(`/admin/users/${encodeURIComponent(username)}/password`, { method: 'PUT', body: { password } });
+      message(`Password updated for ${username}.`);
+      await loadAudit();
+    } catch (e) { message(e.message, false); }
+  }));
+
+  document.querySelectorAll('.deleteBtn').forEach((el) => el.addEventListener('click', async () => {
+    const username = el.closest('tr').dataset.user;
+    if (!window.confirm(`Delete user ${username}?`)) return;
+    try {
+      await T2W.api(`/admin/users/${encodeURIComponent(username)}`, { method: 'DELETE' });
+      message(`User ${username} deleted.`);
+      await Promise.all([loadUsers(), loadAudit()]);
+    } catch (e) { message(e.message, false); }
+  }));
+}
+
+async function loadAudit() {
+  const rows = await T2W.api('/admin/audit?limit=50');
+  document.querySelector('#auditTable tbody').innerHTML = rows.map((r) => `
+    <tr><td>${T2W.esc(new Date(r.happenedAt).toLocaleString())}</td><td>${T2W.esc(r.username || '')}</td><td>${T2W.esc(r.action)}</td><td>${T2W.esc(JSON.stringify(r.details || {}))}</td></tr>`).join('');
+}
+
+(async () => {
+  me = await T2W.mount();
+  if (!me || me.role !== 'admin') {
+    document.querySelector('main').innerHTML = '<div class="msg err">Administrator access is required.</div>';
+    return;
+  }
+
+  await Promise.all([loadStatus(), loadUsers(), loadAudit()]);
+
+  document.getElementById('addUser').addEventListener('click', async () => {
+    const body = {
+      username: document.getElementById('newUsername').value,
+      fullName: document.getElementById('newFullName').value,
+      email: document.getElementById('newEmail').value,
+      role: document.getElementById('newRole').value,
+      password: document.getElementById('newPassword').value,
+    };
+    try {
+      await T2W.api('/admin/users', { method: 'POST', body });
+      document.getElementById('newUsername').value = '';
+      document.getElementById('newFullName').value = '';
+      document.getElementById('newEmail').value = '';
+      document.getElementById('newPassword').value = '';
+      message(`User ${body.username} created.`);
+      await Promise.all([loadUsers(), loadAudit()]);
+    } catch (e) { message(e.message, false); }
+  });
+
+  const resetInput = document.getElementById('resetConfirm');
+  const resetButton = document.getElementById('resetProject');
+  resetInput.addEventListener('input', () => { resetButton.disabled = resetInput.value !== 'RESET'; });
+  resetButton.addEventListener('click', async () => {
+    if (!window.confirm('Reset all project progress back to the saved baseline?')) return;
+    try {
+      resetButton.disabled = true;
+      const result = await T2W.api('/admin/reset-project', { method: 'POST', body: { confirm: 'RESET' } });
+      resetInput.value = '';
+      message('Project progress has been reset to the saved baseline.');
+      await Promise.all([loadStatus(), loadAudit()]);
+    } catch (e) {
+      message(e.message, false);
+      resetButton.disabled = resetInput.value !== 'RESET';
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+# Local Cloudflare development only. Copy this file to .dev.vars and fill in values.
+DATABASE_URL="postgres://postgres.PROJECT_REF:DB_PASSWORD@aws-REGION.pooler.supabase.com:5432/postgres"
+SUPABASE_URL="https://PROJECT_REF.supabase.co"
+SUPABASE_PUBLISHABLE_KEY="sb_publishable_xxx"
+SUPABASE_SECRET_KEY="sb_secret_xxx"
+T2W_SESSION_SECRET="replace-with-a-long-random-value"
+T2W_ADMIN_PASS="replace-with-a-strong-admin-password"
+T2W_ADMIN_USER="admin"
+T2W_ADMIN_FULL_NAME="Administrator"
+T2W_AUTH_DOMAIN="t2w.invalid"
