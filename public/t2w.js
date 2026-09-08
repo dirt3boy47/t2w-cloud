@@ -4,6 +4,7 @@ const T2W = (() => {
     ['/search.html', 'Search'],
     ['/dashboard.html', 'Costs'],
     ['/end-of-day.html', 'End of day'],
+    ['/schedule.html', 'Live schedule'],
     ['/chainage.html', 'Chainage map'],
     ['/reports.html', 'Reports'],
     ['/drawings.html', 'Drawings'],
@@ -52,6 +53,22 @@ const T2W = (() => {
     return new Date().toISOString().slice(0, 10);
   }
 
+  async function loadEnhancement(here) {
+    const scripts = {
+      '/end-of-day.html': '/schedule-integration.js',
+    };
+    const src = scripts[here];
+    if (!src || document.querySelector(`script[data-t2w-enhancement="${src}"]`)) return;
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.dataset.t2wEnhancement = src;
+      s.onload = resolve;
+      s.onerror = () => reject(new Error(`Could not load ${src}`));
+      document.head.appendChild(s);
+    });
+  }
+
   async function mount() {
     const me = await api('/me').catch(() => null);
     const bar = document.createElement('div');
@@ -71,6 +88,7 @@ const T2W = (() => {
       await api('/logout', { method: 'POST' });
       window.location.href = '/login.html';
     });
+    try { await loadEnhancement(here); } catch (err) { console.error(err); }
     return me;
   }
 
