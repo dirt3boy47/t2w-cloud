@@ -56,6 +56,7 @@ const T2W = (() => {
   async function loadEnhancement(here) {
     const scripts = {
       '/end-of-day.html': '/schedule-integration.js',
+      '/schedule.html': '/schedule-method.js',
     };
     const src = scripts[here];
     if (!src || document.querySelector(`script[data-t2w-enhancement="${src}"]`)) return;
