@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Live schedule | T2W Pipeline Asset Register</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .schedule-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  .schedule-head h2{margin:0 0 5px}.schedule-head p{margin:0;color:var(--muted);font-size:13px}
+  .summary-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-top:14px}
+  .summary-box{border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff}
+  .summary-box span{display:block;color:var(--muted);font-size:11px}.summary-box b{font-size:20px}
+  .filters{display:grid;grid-template-columns:1.4fr repeat(4,1fr);gap:10px;margin-top:14px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:12px 0}
+  .legend i{display:inline-block;width:24px;height:8px;border-radius:4px;margin-right:5px;vertical-align:1px}
+  .legend .base{background:#d9dee5}.legend .actual{background:#294861}.legend .forecast{background:#a55d1a;width:3px;height:12px}
+  .gantt-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
+  .gantt{min-width:1180px}
+  .gantt-header,.gantt-row{display:grid;grid-template-columns:440px 1fr;min-height:54px;border-bottom:1px solid #edf0f3}
+  .gantt-header{min-height:42px;position:sticky;top:0;background:#f8fafc;z-index:5}
+  .left-head,.activity-cell{padding:8px 10px;border-right:1px solid var(--line)}
+  .activity-cell{display:flex;gap:10px;align-items:flex-start}
+  .activity-main{min-width:0;flex:1}.activity-id{font-weight:700;font-size:12px}.activity-name{font-size:12px;margin-top:2px;line-height:1.25}
+  .activity-meta{font-size:10.5px;color:var(--muted);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap}
+  .method-pill,.status-pill{display:inline-block;padding:2px 6px;border-radius:999px;font-size:10px;font-weight:700;background:#edf2f7}
+  .status-Delayed{background:#fee2e2}.status-At-risk{background:#ffedd5}.status-Complete{background:#dcfce7}.status-Ahead{background:#dbeafe}
+  .update-btn{font-size:10px;padding:3px 7px;white-space:nowrap}
+  .timeline-head,.timeline-cell{position:relative;overflow:hidden}
+  .timeline-head{background:repeating-linear-gradient(to right,#f1f3f6 0,#f1f3f6 1px,transparent 1px,transparent 8.333%)}
+  .month-labels{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 8px;color:var(--muted);font-size:10px}
+  .timeline-cell{background:repeating-linear-gradient(to right,#f5f6f8 0,#f5f6f8 1px,transparent 1px,transparent 8.333%)}
+  .baseline-bar{position:absolute;height:18px;top:12px;background:#d9dee5;border-radius:4px;min-width:2px}
+  .actual-bar{height:100%;background:#294861;border-radius:4px 0 0 4px}
+  .forecast-marker{position:absolute;top:7px;height:28px;width:3px;background:#a55d1a;border-radius:2px}
+  .today-marker{position:absolute;top:0;bottom:0;width:1px;background:#76808c;opacity:.6}
+  .bar-label{position:absolute;top:33px;font-size:10px;color:var(--muted);white-space:nowrap}
+  .area-row{padding:8px 10px;background:#f3f6f9;font-weight:700;font-size:12px;border-bottom:1px solid var(--line)}
+  .empty{padding:24px;text-align:center;color:var(--muted)}
+  @media(max-width:900px){.summary-grid{grid-template-columns:repeat(3,1fr)}.filters{grid-template-columns:1fr 1fr}.gantt-header,.gantt-row{grid-template-columns:360px 1fr}}
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <div class="schedule-head">
+      <div>
+        <h2>Live construction schedule</h2>
+        <p>Baseline stays fixed. EOD metres, completed assets and manual updates create the live progress layer.</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:end">
+        <div class="field"><label>As at date</label><input id="asOf" type="date"></div>
+        <button class="btn" id="refreshBtn">Refresh</button>
+      </div>
+    </div>
+    <div class="summary-grid" id="summary"></div>
+    <div class="filters">
+      <div class="field"><label>Find activity</label><input id="search" placeholder="Activity ID, name or chainage"></div>
+      <div class="field"><label>Section</label><select id="section"><option value="">All</option></select></div>
+      <div class="field"><label>Method</label><select id="method"><option value="">All</option></select></div>
+      <div class="field"><label>Status</label><select id="status"><option value="">All</option></select></div>
+      <div class="field"><label>Area</label><select id="area"><option value="">All</option></select></div>
+    </div>
+    <div class="legend">
+      <span><i class="base"></i>Baseline activity</span>
+      <span><i class="actual"></i>Actual completion</span>
+      <span><i class="forecast"></i>Forecast finish</span>
+      <span>METRES uses completed chainage. ASSETS uses ticked mapped assets. MANUAL and MILESTONE are planner controlled.</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="gantt-wrap"><div class="gantt" id="gantt"></div></div>
+  </div>
+</main>
+<script src="/t2w.js"></script>
+<script>
+let LIVE = null;
+
+const el = (id) => document.getElementById(id);
+const dayNo = (v) => v ? Math.floor(new Date(v + 'T00:00:00Z').getTime() / 86400000) : null;
+const fmt = (v) => v ? new Date(v + 'T00:00:00').toLocaleDateString(undefined,{day:'numeric',month:'short',year:'2-digit'}) : '';
+const pct = (v) => Number(v || 0).toFixed(1) + '%';
+
+function leftPct(date) {
+  if (!LIVE || !date || !LIVE.projectStart || !LIVE.projectFinish) return 0;
+  const start = dayNo(LIVE.projectStart), finish = dayNo(LIVE.projectFinish);
+  return Math.max(0, Math.min(100, ((dayNo(date) - start) / Math.max(1, finish - start)) * 100));
+}
+function widthPct(startDate, finishDate) {
+  if (!startDate || !finishDate) return 0.4;
+  return Math.max(0.4, leftPct(finishDate) - leftPct(startDate));
+}
+function statusClass(v){ return 'status-' + String(v || '').replaceAll(' ','-'); }
+
+function fillSelect(id, values) {
+  const s = el(id), current = s.value;
+  s.innerHTML = '<option value="">All</option>' + values.filter(Boolean).sort().map(v => `<option>${T2W.esc(v)}</option>`).join('');
+  if ([...s.options].some(o => o.value === current)) s.value = current;
+}
+
+function renderSummary() {
+  const s = LIVE.summary;
+  el('summary').innerHTML = [
+    ['Activities', s.total], ['Complete', s.complete], ['On track', s.onTrack],
+    ['At risk', s.atRisk], ['Delayed', s.delayed], ['Ahead', s.ahead],
+  ].map(([k,v]) => `<div class="summary-box"><span>${k}</span><b>${v}</b></div>`).join('');
+}
+
+function filteredItems() {
+  const q = el('search').value.trim().toLowerCase();
+  return LIVE.items.filter(a => {
+    if (el('section').value && a.section !== el('section').value) return false;
+    if (el('method').value && a.method !== el('method').value) return false;
+    if (el('status').value && a.status !== el('status').value) return false;
+    if (el('area').value && a.area !== el('area').value) return false;
+    if (q) {
+      const hay = [a.activityId,a.activityName,a.chainageDisplay,a.workPackage,a.costCode].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function rowHtml(a) {
+  const l = leftPct(a.plannedStart), w = widthPct(a.plannedStart,a.plannedFinish);
+  const actualW = Math.max(0, Math.min(100, Number(a.percentComplete || 0)));
+  const forecastL = a.forecastFinish ? leftPct(a.forecastFinish) : null;
+  const todayL = leftPct(LIVE.asOf);
+  const asset = a.assetCount ? `${a.assetComplete}/${a.assetCount} assets` : '';
+  const qty = a.method === 'METRES' && a.plannedQuantity != null
+    ? `${T2W.num(a.completedQuantity,1)} / ${T2W.num(a.plannedQuantity,1)} m` : asset;
+  const variance = a.varianceDays == null ? '' : a.varianceDays > 0 ? `+${a.varianceDays} d` : `${a.varianceDays} d`;
+  const canManual = a.method === 'MANUAL' || a.method === 'MILESTONE';
+  return `<div class="gantt-row" data-id="${T2W.esc(a.activityId)}">
+    <div class="activity-cell">
+      <div class="activity-main">
+        <div><span class="activity-id">${T2W.esc(a.activityId)}</span> <span class="method-pill">${T2W.esc(a.method)}</span> <span class="status-pill ${statusClass(a.status)}">${T2W.esc(a.status)}</span></div>
+        <div class="activity-name">${T2W.esc(a.activityName)}</div>
+        <div class="activity-meta"><span>${pct(a.percentComplete)} actual</span><span>${pct(a.plannedPercent)} planned</span><span>${T2W.esc(qty)}</span><span>${T2W.esc(variance)}</span><span>${T2W.esc(a.costCode || '')}</span></div>
+      </div>
+      ${canManual ? `<button class="btn secondary update-btn" data-update="${T2W.esc(a.activityId)}">Update</button>` : ''}
+    </div>
+    <div class="timeline-cell">
+      <div class="today-marker" style="left:${todayL}%"></div>
+      <div class="baseline-bar" style="left:${l}%;width:${w}%"><div class="actual-bar" style="width:${actualW}%"></div></div>
+      ${forecastL == null ? '' : `<div class="forecast-marker" style="left:${forecastL}%"></div>`}
+      <div class="bar-label" style="left:${Math.min(92,l)}%">${T2W.esc(fmt(a.plannedStart))} to ${T2W.esc(fmt(a.plannedFinish))}${a.forecastFinish ? ` · forecast ${T2W.esc(fmt(a.forecastFinish))}` : ''}</div>
+    </div>
+  </div>`;
+}
+
+function renderGantt() {
+  const rows = filteredItems();
+  const groups = new Map();
+  rows.forEach(a => { const k = a.area || 'Other'; if (!groups.has(k)) groups.set(k,[]); groups.get(k).push(a); });
+  const months = LIVE.projectStart && LIVE.projectFinish ? [LIVE.projectStart.slice(0,7), LIVE.projectFinish.slice(0,7)] : ['', ''];
+  let html = `<div class="gantt-header"><div class="left-head"><b>Activity</b></div><div class="timeline-head"><div class="month-labels"><span>${T2W.esc(months[0])}</span><span>${T2W.esc(LIVE.asOf)} today</span><span>${T2W.esc(months[1])}</span></div></div></div>`;
+  if (!rows.length) html += '<div class="empty">No activities match the filters.</div>';
+  for (const [area, items] of groups.entries()) {
+    html += `<div class="area-row">${T2W.esc(area)} · ${items.length} activities</div>`;
+    html += items.map(rowHtml).join('');
+  }
+  el('gantt').innerHTML = html;
+  document.querySelectorAll('[data-update]').forEach(b => b.addEventListener('click', () => updateManual(b.dataset.update)));
+}
+
+async function updateManual(id) {
+  const a = LIVE.items.find(x => x.activityId === id);
+  if (!a) return;
+  const raw = prompt(`Percent complete for ${id}`, String(Number(a.percentComplete || 0).toFixed(1)));
+  if (raw === null) return;
+  const percentComplete = Math.max(0,Math.min(100,Number(raw)));
+  if (!Number.isFinite(percentComplete)) return alert('Enter a number from 0 to 100.');
+  const actualStart = prompt('Actual start date YYYY-MM-DD (optional)', a.actualStart || '') ?? a.actualStart;
+  const actualFinish = prompt('Actual finish date YYYY-MM-DD (optional)', percentComplete >= 100 ? (a.actualFinish || el('asOf').value) : (a.actualFinish || '')) ?? a.actualFinish;
+  const note = prompt('Progress note (optional)', a.manualNote || '') ?? a.manualNote;
+  LIVE = await T2W.api('/schedule/manual/' + encodeURIComponent(id), { method:'PUT', body:{ percentComplete, actualStart, actualFinish, note, asOf:el('asOf').value } });
+  hydrateFilters(); renderSummary(); renderGantt();
+}
+
+function hydrateFilters() {
+  fillSelect('section',[...new Set(LIVE.items.map(a=>a.section))]);
+  fillSelect('method',[...new Set(LIVE.items.map(a=>a.method))]);
+  fillSelect('status',[...new Set(LIVE.items.map(a=>a.status))]);
+  fillSelect('area',[...new Set(LIVE.items.map(a=>a.area))]);
+}
+
+async function load() {
+  const asOf = el('asOf').value || T2W.todayISO();
+  LIVE = await T2W.api('/schedule/live?asOf=' + encodeURIComponent(asOf));
+  hydrateFilters(); renderSummary(); renderGantt();
+}
+
+(async()=>{
+  await T2W.mount();
+  el('asOf').value = T2W.todayISO();
+  await load();
+  el('refreshBtn').addEventListener('click',load);
+  el('asOf').addEventListener('change',load);
+  ['search','section','method','status','area'].forEach(id => el(id).addEventListener(id==='search'?'input':'change',renderGantt));
+})();
+</script>
+</body>
+</html>

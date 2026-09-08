@@ -5,6 +5,7 @@ const pgSession = require('connect-pg-simple')(session);
 const db = require('./db');
 const { verifyUser, ensureFirstUser, requireLogin } = require('./auth');
 const apiRoutes = require('./routes');
+const scheduleRoutes = require('./schedule-routes');
 const adminRoutes = require('./admin-routes');
 const { migrate } = require('./migrate');
 const { seed } = require('./seed-postgres');
@@ -83,6 +84,7 @@ async function start() {
 
   app.use(requireLogin);
   app.use('/api/admin', adminRoutes);
+  app.use('/api/schedule', scheduleRoutes);
   app.use('/api', apiRoutes);
   app.use(express.static(publicDir));
 
