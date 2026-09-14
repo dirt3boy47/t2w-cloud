@@ -5,6 +5,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 const AUTH_DOMAIN = process.env.T2W_AUTH_DOMAIN || 't2w.invalid';
+const VALID_ROLES = new Set(['admin', 'editor', 'viewer', 'client_viewer', 'crew_chief']);
 
 function assertAuthConfig() {
   const missing = [];
@@ -36,6 +37,12 @@ function defaultEmail(username) {
   return `${cleanUsername(username)}@${AUTH_DOMAIN}`;
 }
 
+function assertRole(role) {
+  if (!VALID_ROLES.has(role)) {
+    throw new Error('Role must be admin, editor, viewer, client_viewer or crew_chief');
+  }
+}
+
 async function userCount() {
   const row = await db.prepare(`SELECT COUNT(*)::int AS n FROM app_profiles`).get();
   return row ? Number(row.n) : 0;
@@ -45,7 +52,7 @@ async function createUser(username, password, fullName, role = 'editor', email =
   const u = cleanUsername(username);
   if (!u) throw new Error('Username is required');
   if (!password || String(password).length < 8) throw new Error('Password must be at least 8 characters');
-  if (!['admin', 'editor', 'viewer'].includes(role)) throw new Error('Role must be admin, editor or viewer');
+  assertRole(role);
 
   const accountEmail = String(email || defaultEmail(u)).trim().toLowerCase();
   const supabase = adminClient();
@@ -141,7 +148,7 @@ async function setPassword(username, password) {
 }
 
 async function setRole(username, role) {
-  if (!['admin', 'editor', 'viewer'].includes(role)) throw new Error('Role must be admin, editor or viewer');
+  assertRole(role);
   const u = cleanUsername(username);
   const profile = await db.prepare(`SELECT * FROM app_profiles WHERE username=?`).get(u);
   if (!profile) throw new Error('Unknown user');
@@ -165,7 +172,7 @@ function requireAdmin(req, res, next) {
 
 function requireEditor(req, res, next) {
   const role = req.session && req.session.user && req.session.user.role;
-  if (role === 'admin' || role === 'editor') return next();
+  if (role === 'admin' || role === 'editor' || role === 'crew_chief') return next();
   return res.status(403).json({ error: 'This account is read only' });
 }
 
