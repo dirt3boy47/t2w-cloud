@@ -12,6 +12,9 @@ const T2W = (() => {
     ['/rates.html', 'Plant & rates'],
     ['/edit-log.html', 'Edit log'],
   ];
+  const CLIENT_PAGES = [
+    ['/client-reports.html', 'Reports'],
+  ];
 
   async function api(path, opts = {}) {
     const res = await fetch('/api' + path, {
@@ -75,9 +78,14 @@ const T2W = (() => {
     const bar = document.createElement('div');
     bar.className = 'topbar';
     const here = window.location.pathname === '/index.html' ? '/' : window.location.pathname;
-    const pages = me && me.role === 'admin' ? PAGES.concat([['/admin.html', 'Admin']]) : PAGES;
+    let pages = PAGES;
+    if (me && me.role === 'client_viewer') pages = CLIENT_PAGES;
+    else if (me && me.role === 'admin') pages = PAGES.concat([['/admin.html', 'Admin']]);
+    const title = me && me.role === 'client_viewer'
+      ? 'T2W Pipeline — Client Reports'
+      : 'T2W Pipeline — Master Asset Register';
     bar.innerHTML = `
-      <h1>T2W Pipeline — Master Asset Register</h1>
+      <h1>${title}</h1>
       <nav>${pages.map(([href, label]) =>
         `<a href="${href}" class="${here === href ? 'active' : ''}">${label}</a>`).join('')}</nav>
       <div class="who">

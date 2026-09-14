@@ -5,6 +5,7 @@ const pgSession = require('connect-pg-simple')(session);
 const db = require('./db');
 const { verifyUser, ensureFirstUser, requireLogin } = require('./auth');
 const apiRoutes = require('./routes');
+const clientReportRoutes = require('./client-reports');
 const scheduleRoutes = require('./schedule-routes');
 const adminRoutes = require('./admin-routes');
 const { migrate } = require('./migrate');
@@ -12,6 +13,22 @@ const { seed } = require('./seed-postgres');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
+
+function clientViewerGuard(req, res, next) {
+  const role = req.session && req.session.user && req.session.user.role;
+  if (role !== 'client_viewer') return next();
+
+  const allowedPage = req.path === '/client-reports.html';
+  const allowedAsset = req.path === '/style.css' || req.path === '/t2w.js' || req.path === '/favicon.ico';
+  const allowedApi = req.path.startsWith('/api/client-reports');
+  if (allowedPage || allowedAsset || allowedApi) return next();
+
+  if (req.path.startsWith('/api/')) {
+    return res.status(403).json({ error: 'Client accounts can access reports only' });
+  }
+  if (req.method === 'GET' || req.method === 'HEAD') return res.redirect('/client-reports.html');
+  return res.status(403).send('Client accounts can access reports only');
+}
 
 async function start() {
   await db.ready();
@@ -83,6 +100,8 @@ async function start() {
   app.use('/style.css', express.static(path.join(publicDir, 'style.css')));
 
   app.use(requireLogin);
+  app.use(clientViewerGuard);
+  app.use('/api/client-reports', clientReportRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/schedule', scheduleRoutes);
   app.use('/api', apiRoutes);
