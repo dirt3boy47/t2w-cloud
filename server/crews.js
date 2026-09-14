@@ -213,6 +213,7 @@ async function syncProgress() {
 }
 
 const DRIVER_OF_TRACK = { trench: 'TRENCH', pipe: 'PIPE' };
+const EOD_POINT_REGISTERS = new Set(['Thrust Block', 'Trench Stop & Bulkhead', 'Valve']);
 
 async function assetsInRange(section, track, from, to) {
   const lo = Math.min(from, to), hi = Math.max(from, to);
@@ -225,6 +226,7 @@ async function assetsInRange(section, track, from, to) {
       "Total Cost ($)" AS cost, "Complete" AS complete
     FROM tblAsset
     WHERE "Pipeline Section"=? AND "Completion Driver"=?
+      AND "Register" IN ('Thrust Block','Trench Stop & Bulkhead','Valve')
       AND "Chainage Start (m)" >= ? AND "Chainage Start (m)" <= ?
       AND COALESCE("Complete",'') <> 'Yes'
     ORDER BY "Chainage Start (m)"
@@ -243,6 +245,7 @@ async function catchingUp(section) {
         "Total Cost ($)" AS cost
       FROM tblAsset
       WHERE "Pipeline Section"=? AND COALESCE("Complete",'') <> 'Yes'
+        AND "Register" IN ('Thrust Block','Trench Stop & Bulkhead','Valve')
         AND "Chainage Start (m)" IS NOT NULL AND "Completion Driver" IS NOT NULL
       ORDER BY "Chainage Start (m)"
     `).all(section),
@@ -280,9 +283,10 @@ async function saveCrewDay({ date, by, shift, weather, downtime, notes, moves, c
     const tickedBySection = Object.fromEntries(sections.map((s) => [s, 0]));
     for (const key of completeKeys || []) {
       const row = await db.prepare(`
-        SELECT "Complete" AS c, "Pipeline Section" AS section FROM tblAsset WHERE "Record Key"=?
+        SELECT "Complete" AS c, "Pipeline Section" AS section, "Register" AS register
+        FROM tblAsset WHERE "Record Key"=?
       `).get(key);
-      if (row && row.c !== 'Yes') {
+      if (row && row.c !== 'Yes' && EOD_POINT_REGISTERS.has(row.register)) {
         await engine.updateAsset(key, { Complete: 'Yes', 'Completion Date': date }, by);
         tickedCount++;
         if (row.section in tickedBySection) tickedBySection[row.section]++;
