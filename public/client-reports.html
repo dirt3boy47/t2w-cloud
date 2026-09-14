@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Client Reports — T2W Pipeline</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .client-hero { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; flex-wrap:wrap; }
+  .client-hero p { margin:4px 0 0; color:var(--muted); max-width:760px; }
+  .rpnav { display:flex; gap:6px; flex-wrap:wrap; margin-top:14px; }
+  .rpnav button { background:#fff; border:1px solid var(--line); border-radius:7px; padding:7px 12px; font-size:12.5px; cursor:pointer; color:var(--muted); }
+  .rpnav button.on { background:var(--brand); border-color:var(--brand); color:#fff; font-weight:600; }
+  .rpctl { display:flex; gap:10px; align-items:end; flex-wrap:wrap; margin-top:12px; }
+  .rpctl .field { margin-bottom:0; min-width:150px; }
+  .report-note { background:#f6f8fb; border:1px solid var(--line); border-radius:7px; padding:9px 11px; color:var(--muted); font-size:12.5px; }
+  @media print {
+    .topbar, .client-controls, .noprint { display:none !important; }
+    .card { border:none; box-shadow:none; padding:0; }
+    body { background:#fff; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="card client-controls noprint">
+    <div class="client-hero">
+      <div>
+        <h2 style="margin-bottom:0">Client reports</h2>
+        <p>Read only project reporting. Internal rates, direct costs, profit and margin information are not included in this portal.</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn secondary" id="btnPrint">Print</button>
+        <button class="btn secondary" id="btnCsv">Export CSV</button>
+      </div>
+    </div>
+    <div class="rpnav" id="rpNav">
+      <button data-rp="overview" class="on">Position</button>
+      <button data-rp="daily">A day</button>
+      <button data-rp="production">Production</button>
+      <button data-rp="look">Look ahead</button>
+      <button data-rp="qty">Quantities</button>
+      <button data-rp="outstanding">Outstanding</button>
+      <button data-rp="completed">Completed</button>
+      <button data-rp="safety">Safety &amp; plant</button>
+    </div>
+    <div class="rpctl" id="rpCtl"></div>
+  </div>
+
+  <div class="card" id="rpOut"><div class="count">Loading report…</div></div>
+</main>
+
+<script src="/t2w.js"></script>
+<script>
+let activeReport = 'overview';
+let lastRows = [];
+let lastCols = [];
+
+const num = (v) => T2W.num(v);
+const num1 = (v) => T2W.num(v, 1);
+const esc = (v) => T2W.esc(v ?? '');
+
+function setControls(html) {
+  document.getElementById('rpCtl').innerHTML = html;
+}
+
+function setOutput(html) {
+  document.getElementById('rpOut').innerHTML = html;
+}
+
+function table(rows, cols) {
+  lastRows = rows || [];
+  lastCols = cols || [];
+  if (!lastRows.length) return '<div class="count">Nothing to show for this selection.</div>';
+  return `<div class="table-wrap"><table class="data">
+    <thead><tr>${cols.map((c) => `<th>${esc(c.label)}</th>`).join('')}</tr></thead>
+    <tbody>${lastRows.map((r) => `<tr>${cols.map((c) => `<td>${c.fmt ? c.fmt(r[c.key], r) : esc(r[c.key])}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function dateRangeControls(renderFn, defaultDays = 27) {
+  const to = T2W.todayISO();
+  const from = new Date(Date.now() - defaultDays * 864e5).toISOString().slice(0, 10);
+  setControls(`
+    <div class="field"><label>From</label><input id="cFrom" type="date" value="${from}"></div>
+    <div class="field"><label>To</label><input id="cTo" type="date" value="${to}"></div>
+    <button class="btn" id="cGo">Show</button>`);
+  document.getElementById('cGo').addEventListener('click', renderFn);
+}
+
+const VIEWS = {
+  async overview() {
+    setControls('');
+    const d = await T2W.api('/client-reports/overview');
+    const countMap = Object.fromEntries((d.counts || []).map((r) => [r.section, r]));
+    const rows = (d.sections || []).map((s) => {
+      const c = countMap[s.section] || { records: 0, complete: 0 };
+      const extent = Number(s.extent || 0);
+      return {
+        ...s,
+        records: c.records,
+        complete: c.complete,
+        completePct: c.records ? (Number(c.complete || 0) / Number(c.records)) * 100 : 0,
+        trenchPct: extent ? (Number(s.trenchFront || 0) / extent) * 100 : 0,
+        pipePct: extent ? (Number(s.pipeFront || 0) / extent) * 100 : 0,
+      };
+    });
+    setOutput(`<h2>Project position</h2>
+      <div class="report-note" style="margin-bottom:12px">Physical progress only. Commercial performance and internal cost information are excluded.</div>
+      ${table(rows, [
+        { key:'section', label:'Section' },
+        { key:'extent', label:'Extent (m)', fmt:num },
+        { key:'trenchFront', label:'Trench front (m)', fmt:num },
+        { key:'trenchPct', label:'Trench %', fmt:(v) => num1(v) + '%' },
+        { key:'pipeFront', label:'Pipe front (m)', fmt:num },
+        { key:'pipePct', label:'Pipe %', fmt:(v) => num1(v) + '%' },
+        { key:'complete', label:'Assets complete', fmt:num },
+        { key:'records', label:'Assets total', fmt:num },
+        { key:'completePct', label:'Asset completion %', fmt:(v) => num1(v) + '%' },
+        { key:'asAt', label:'As at' },
+      ])}`);
+  },
+
+  async daily() {
+    setControls(`
+      <div class="field"><label>Date</label><input id="cDate" type="date" value="${T2W.todayISO()}"></div>
+      <button class="btn" id="cGo">Show</button>`);
+    document.getElementById('cGo').addEventListener('click', () => VIEWS.dailyRender());
+    await VIEWS.dailyRender();
+  },
+
+  async dailyRender() {
+    const date = document.getElementById('cDate').value;
+    const d = await T2W.api('/client-reports/day?date=' + encodeURIComponent(date));
+    const s = d.safety;
+    const progressTable = table(d.progress, [
+      { key:'Pipeline Section', label:'Section' },
+      { key:'Trench From Ch (m)', label:'Trench from', fmt:num },
+      { key:'Trench To Ch (m)', label:'Trench to', fmt:num },
+      { key:'Trench m Today', label:'Trench m', fmt:num },
+      { key:'Pipe From Ch (m)', label:'Pipe from', fmt:num },
+      { key:'Pipe To Ch (m)', label:'Pipe to', fmt:num },
+      { key:'Pipe m Today', label:'Pipe m', fmt:num },
+      { key:'Weather', label:'Weather' },
+      { key:'Downtime (hrs)', label:'Downtime (h)', fmt:num1 },
+    ]);
+    const completedTable = table(d.completed, [
+      { key:'recordKey', label:'Record key' },
+      { key:'section', label:'Section' },
+      { key:'register', label:'Register' },
+      { key:'assetType', label:'Type' },
+      { key:'chainage', label:'Chainage', fmt:num },
+      { key:'quantity', label:'Quantity', fmt:num1 },
+      { key:'unit', label:'Unit' },
+      { key:'claimItem', label:'BOQ / claim item' },
+      { key:'costCode', label:'Cost code' },
+      { key:'activityId', label:'Schedule activity ID' },
+    ]);
+    const plantTable = table(d.plant, [
+      { key:'Pipeline Section', label:'Section' },
+      { key:'Crew', label:'Crew' },
+      { key:'Type', label:'Type' },
+      { key:'Description', label:'Description' },
+      { key:'Number', label:'No.', fmt:num },
+      { key:'Hours', label:'Hours', fmt:num1 },
+      { key:'Standby Hours', label:'Standby (h)', fmt:num1 },
+    ]);
+    const holdTable = table(d.holdPoints, [
+      { key:'Reference', label:'Reference' },
+      { key:'Description', label:'Description' },
+      { key:'Status', label:'Status' },
+      { key:'Record Key', label:'Record key' },
+    ]);
+    lastRows = d.completed;
+    lastCols = [
+      { key:'recordKey', label:'Record key' }, { key:'section', label:'Section' },
+      { key:'register', label:'Register' }, { key:'assetType', label:'Type' },
+      { key:'chainage', label:'Chainage' }, { key:'quantity', label:'Quantity' },
+      { key:'unit', label:'Unit' }, { key:'claimItem', label:'BOQ / claim item' },
+      { key:'costCode', label:'Cost code' }, { key:'activityId', label:'Schedule activity ID' },
+    ];
+    setOutput(`
+      <h2>Day report — ${esc(date)}</h2>
+      <h2 style="margin-top:14px">Progress</h2>${progressTable}
+      <h2 style="margin-top:18px">Assets completed on this day</h2>${completedTable}
+      <h2 style="margin-top:18px">Plant and labour</h2>${plantTable}
+      <h2 style="margin-top:18px">Safety</h2>
+      ${s ? `<div class="grid cols-4">
+        <div><label>Toolbox</label><div>${esc(s['Toolbox Held'] || 'No')}</div></div>
+        <div><label>Topic</label><div>${esc(s['Toolbox Topic'] || '—')}</div></div>
+        <div><label>Personnel</label><div>${esc(s['Personnel On Site'] ?? '—')}</div></div>
+        <div><label>Incident</label><div>${esc(s['Incident Class'] || 'None')}${s['Incident Detail'] ? ' — ' + esc(s['Incident Detail']) : ''}</div></div>
+      </div>` : '<div class="count">No safety record for this day.</div>'}
+      <h2 style="margin-top:18px">Hold points raised</h2>${holdTable}`);
+  },
+
+  async production() {
+    dateRangeControls(() => VIEWS.productionRender());
+    await VIEWS.productionRender();
+  },
+
+  async productionRender() {
+    const from = document.getElementById('cFrom').value;
+    const to = document.getElementById('cTo').value;
+    const d = await T2W.api(`/client-reports/production?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+    const t = d.totals;
+    setOutput(`<h2>Production — ${esc(from)} to ${esc(to)}</h2>
+      <div class="grid cols-4" style="margin-bottom:16px">
+        <div class="kpi"><div class="label">Days booked</div><div class="value">${num(t.days)}</div></div>
+        <div class="kpi"><div class="label">Trench metres</div><div class="value">${num(t.trenchM)}</div><div class="count">avg ${num1(t.avgTrenchM)} m/day</div></div>
+        <div class="kpi"><div class="label">Pipe metres</div><div class="value">${num(t.pipeM)}</div><div class="count">avg ${num1(t.avgPipeM)} m/day</div></div>
+        <div class="kpi"><div class="label">Downtime</div><div class="value">${num1(t.downtime)} h</div></div>
+      </div>
+      ${table(d.rows, [
+        { key:'date', label:'Date' },
+        { key:'section', label:'Section' },
+        { key:'trenchM', label:'Trench m', fmt:num },
+        { key:'pipeM', label:'Pipe m', fmt:num },
+        { key:'downtime', label:'Downtime (h)', fmt:num1 },
+      ])}`);
+  },
+
+  async look() {
+    setControls(`
+      <div class="field"><label>Metres ahead of each front</label><input id="cM" type="number" value="500" step="100"></div>
+      <button class="btn" id="cGo">Show</button>`);
+    document.getElementById('cGo').addEventListener('click', () => VIEWS.lookRender());
+    await VIEWS.lookRender();
+  },
+
+  async lookRender() {
+    const m = document.getElementById('cM').value || 500;
+    const rows = await T2W.api('/client-reports/look-ahead?metres=' + encodeURIComponent(m));
+    setOutput(`<h2>Look ahead — next ${esc(m)} m</h2>
+      ${table(rows, [
+        { key:'ahead', label:'Metres ahead', fmt:num },
+        { key:'section', label:'Section' },
+        { key:'driver', label:'Driven by' },
+        { key:'chainage', label:'Chainage', fmt:num },
+        { key:'register', label:'Register' },
+        { key:'assetType', label:'Type' },
+        { key:'feature', label:'Feature' },
+      ])}`);
+  },
+
+  async qty() {
+    setControls('');
+    const rows = await T2W.api('/client-reports/quantities');
+    setOutput(`<h2>Quantities</h2>${table(rows, [
+      { key:'section', label:'Section' },
+      { key:'register', label:'Register' },
+      { key:'assetType', label:'Asset type' },
+      { key:'records', label:'Records', fmt:num },
+      { key:'complete', label:'Complete', fmt:num },
+      { key:'quantity', label:'Quantity', fmt:num1 },
+      { key:'unit', label:'Unit' },
+    ])}`);
+  },
+
+  async outstanding() {
+    setControls('');
+    const rows = await T2W.api('/client-reports/outstanding');
+    setOutput(`<h2>Outstanding behind the front</h2>
+      <div class="report-note" style="margin-bottom:12px">Items where the governing front has passed the asset but completion has not yet been recorded.</div>
+      ${table(rows, [
+        { key:'recordKey', label:'Record key' },
+        { key:'section', label:'Section' },
+        { key:'register', label:'Register' },
+        { key:'assetType', label:'Type' },
+        { key:'chainage', label:'Chainage', fmt:num },
+        { key:'driver', label:'Driven by' },
+        { key:'feature', label:'Feature' },
+      ])}`);
+  },
+
+  async completed() {
+    dateRangeControls(() => VIEWS.completedRender(), 27);
+    await VIEWS.completedRender();
+  },
+
+  async completedRender() {
+    const from = document.getElementById('cFrom').value;
+    const to = document.getElementById('cTo').value;
+    const rows = await T2W.api(`/client-reports/completed?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+    setOutput(`<h2>Completed assets — ${esc(from)} to ${esc(to)}</h2>
+      ${table(rows, [
+        { key:'completionDate', label:'Completion date' },
+        { key:'recordKey', label:'Record key' },
+        { key:'section', label:'Section' },
+        { key:'register', label:'Register' },
+        { key:'assetType', label:'Type' },
+        { key:'chainage', label:'Chainage', fmt:num },
+        { key:'quantity', label:'Quantity', fmt:num1 },
+        { key:'unit', label:'Unit' },
+        { key:'claimItem', label:'BOQ / claim item' },
+        { key:'costCode', label:'Cost code' },
+        { key:'activityId', label:'Schedule activity ID' },
+        { key:'activityName', label:'Schedule activity' },
+      ])}`);
+  },
+
+  async safety() {
+    dateRangeControls(() => VIEWS.safetyRender(), 27);
+    await VIEWS.safetyRender();
+  },
+
+  async safetyRender() {
+    const from = document.getElementById('cFrom').value;
+    const to = document.getElementById('cTo').value;
+    const d = await T2W.api(`/client-reports/safety-plant?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+    const safetyTable = table(d.safety, [
+      { key:'Date', label:'Date' },
+      { key:'Toolbox Held', label:'Toolbox' },
+      { key:'Toolbox Topic', label:'Topic' },
+      { key:'Personnel On Site', label:'Personnel', fmt:num },
+      { key:'Incident Class', label:'Incident class' },
+      { key:'Incident Detail', label:'Incident detail' },
+      { key:'Lost Time (hrs)', label:'Lost time (h)', fmt:num1 },
+    ]);
+    const plantTable = table(d.plant, [
+      { key:'date', label:'Date' },
+      { key:'section', label:'Section' },
+      { key:'crew', label:'Crew' },
+      { key:'type', label:'Type' },
+      { key:'description', label:'Description' },
+      { key:'hours', label:'Hours', fmt:num1 },
+    ]);
+    const holdTable = table(d.holdPoints, [
+      { key:'Date', label:'Date' },
+      { key:'Reference', label:'Reference' },
+      { key:'Description', label:'Description' },
+      { key:'Status', label:'Status' },
+      { key:'Record Key', label:'Record key' },
+    ]);
+    lastRows = d.plant;
+    lastCols = [
+      { key:'date', label:'Date' }, { key:'section', label:'Section' }, { key:'crew', label:'Crew' },
+      { key:'type', label:'Type' }, { key:'description', label:'Description' }, { key:'hours', label:'Hours' },
+    ];
+    setOutput(`<h2>Safety and plant — ${esc(from)} to ${esc(to)}</h2>
+      <h2 style="margin-top:14px">Safety</h2>${safetyTable}
+      <h2 style="margin-top:18px">Plant and labour hours</h2>${plantTable}
+      <h2 style="margin-top:18px">Hold points</h2>${holdTable}`);
+  },
+};
+
+function csvCell(v) {
+  const text = String(v ?? '');
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function exportCsv() {
+  if (!lastRows.length || !lastCols.length) return;
+  const lines = [lastCols.map((c) => csvCell(c.label)).join(',')];
+  for (const row of lastRows) lines.push(lastCols.map((c) => csvCell(row[c.key])).join(','));
+  const blob = new Blob([lines.join('\n')], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `t2w-client-${activeReport}-${T2W.todayISO()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
+}
+
+async function show(report) {
+  activeReport = report;
+  document.querySelectorAll('#rpNav button').forEach((b) => b.classList.toggle('on', b.dataset.rp === report));
+  try {
+    await VIEWS[report]();
+  } catch (err) {
+    setOutput(`<div class="msg err">${esc(err.message || 'Could not load report')}</div>`);
+  }
+}
+
+document.getElementById('rpNav').addEventListener('click', (e) => {
+  const button = e.target.closest('button[data-rp]');
+  if (button) show(button.dataset.rp);
+});
+document.getElementById('btnPrint').addEventListener('click', () => window.print());
+document.getElementById('btnCsv').addEventListener('click', exportCsv);
+
+(async () => {
+  const me = await T2W.mount();
+  if (!me || (me.role !== 'client_viewer' && me.role !== 'admin')) {
+    document.querySelector('main').innerHTML = '<div class="msg err">Client report access is required.</div>';
+    return;
+  }
+  await show('overview');
+})();
+</script>
+</body>
+</html>
