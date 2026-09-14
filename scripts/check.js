@@ -7,9 +7,9 @@ const root = path.join(__dirname, '..');
 const required = [
   'Dockerfile', 'wrangler.jsonc', '.dev.vars.example',
   'server/index.js', 'server/db.js', 'server/auth.js', 'server/routes.js',
-  'server/engine.js', 'server/crews.js', 'server/migrate.js', 'server/seed-postgres.js',
+  'server/client-reports.js', 'server/engine.js', 'server/crews.js', 'server/migrate.js', 'server/seed-postgres.js',
   'supabase/migrations/202609070001_init.sql',
-  'public/end-of-day.html', 'public/admin.html',
+  'public/end-of-day.html', 'public/admin.html', 'public/client-reports.html',
 ];
 let failed = false;
 for (const file of required) {
@@ -55,6 +55,29 @@ if (crews.indexOf('for (const key of completeKeys || [])') > crews.indexOf('cons
 const seed = fs.readFileSync(path.join(root, 'server/seed-postgres.js'), 'utf8');
 if (seed.includes('SET "Completion"=0')) {
   console.error('Invalid tblTrenchProgress Completion column remains'); failed = true;
+}
+
+const clientApi = fs.readFileSync(path.join(root, 'server/client-reports.js'), 'utf8');
+for (const forbidden of [
+  '"Earned ($)"', '"Profit ($)"', '"Our Cost Today ($)"', '"Cost Rate ($/h)"',
+  '"Total Cost ($)"', '"Unit Rate ($)"',
+]) {
+  if (clientApi.includes(forbidden)) {
+    console.error(`Client reports contain forbidden commercial field ${forbidden}`); failed = true;
+  }
+}
+
+const index = fs.readFileSync(path.join(root, 'server/index.js'), 'utf8');
+if (!index.includes('clientViewerGuard') || !index.includes("app.use('/api/client-reports', clientReportRoutes)")) {
+  console.error('Client viewer server-side access guard is missing'); failed = true;
+}
+
+const clientHtml = fs.readFileSync(path.join(root, 'public/client-reports.html'), 'utf8');
+const inlineScripts = [...clientHtml.matchAll(/<script>([\s\S]*?)<\/script>/gi)].map((m) => m[1]);
+for (const script of inlineScripts) {
+  try { new Function(script); } catch (err) {
+    console.error(`syntax public/client-reports.html inline script\n${err.message}`); failed = true;
+  }
 }
 
 if (failed) process.exit(1);
