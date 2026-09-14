@@ -21,12 +21,19 @@
       <div class="field"><label>Username</label><input id="newUsername" autocomplete="off"></div>
       <div class="field"><label>Full name</label><input id="newFullName" autocomplete="off"></div>
       <div class="field"><label>Email (optional)</label><input id="newEmail" type="email" autocomplete="off"></div>
-      <div class="field"><label>Role</label><select id="newRole"><option value="editor">Editor</option><option value="viewer">Viewer</option><option value="admin">Administrator</option></select></div>
+      <div class="field"><label>Role</label><select id="newRole">
+        <option value="editor">Editor</option>
+        <option value="viewer">Viewer</option>
+        <option value="client_viewer">Client viewer</option>
+        <option value="crew_chief">Crew chief</option>
+        <option value="admin">Administrator</option>
+      </select></div>
     </div>
     <div class="grid cols-2">
       <div class="field"><label>Temporary password</label><input id="newPassword" type="password" autocomplete="new-password" placeholder="At least 8 characters"></div>
       <div class="field" style="display:flex;align-items:flex-end"><button class="btn" id="addUser">Create user</button></div>
     </div>
+    <div class="small-copy" style="margin-top:8px"><strong>Client viewer</strong> accounts are restricted to the client reports portal. They cannot open the asset register, rates, costs, administration pages or internal commercial reporting.</div>
     <div class="table-wrap" style="margin-top:12px;max-height:42vh">
       <table class="data" id="usersTable"><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead><tbody></tbody></table>
     </div>
@@ -84,6 +91,8 @@ async function loadUsers() {
           <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Administrator</option>
           <option value="editor" ${u.role === 'editor' ? 'selected' : ''}>Editor</option>
           <option value="viewer" ${u.role === 'viewer' ? 'selected' : ''}>Viewer</option>
+          <option value="client_viewer" ${u.role === 'client_viewer' ? 'selected' : ''}>Client viewer</option>
+          <option value="crew_chief" ${u.role === 'crew_chief' ? 'selected' : ''}>Crew chief</option>
         </select>
       </td>
       <td>
@@ -166,7 +175,7 @@ async function loadAudit() {
     if (!window.confirm('Reset all project progress back to the saved baseline?')) return;
     try {
       resetButton.disabled = true;
-      const result = await T2W.api('/admin/reset-project', { method: 'POST', body: { confirm: 'RESET' } });
+      await T2W.api('/admin/reset-project', { method: 'POST', body: { confirm: 'RESET' } });
       resetInput.value = '';
       message('Project progress has been reset to the saved baseline.');
       await Promise.all([loadStatus(), loadAudit()]);
